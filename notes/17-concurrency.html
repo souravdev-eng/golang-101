@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goroutines and Channels</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 17 · 17-concurrency/ · ~10 min</p>
+<h1>Goroutines and channels</h1>
+<p class="lede">This folder starts work concurrently and then coordinates it: first by waiting for it, then by passing values over a channel. By the end you'll be able to read the two most common concurrency shapes in Go code.</p>
+
+<h2>What this folder is for</h2>
+<p>Concurrency is a big reason teams choose Go. You'll meet it in servers, workers and pipelines. This topic is an <strong>introduction to the vocabulary</strong>: <code>go</code>, <code>sync.WaitGroup</code>, <code>chan</code>, <code>&lt;-</code> and <code>close</code>. It isn't a full course on concurrent design.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const work = (async () =&gt; {
+  console.log("worker: packed lunch");
+})();
+await work;
+console.log("main: ready to leave");</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>var workers sync.WaitGroup
+workers.Add(1)
+go func() {
+    defer workers.Done()
+    fmt.Println("worker: packed lunch")
+}()
+workers.Wait()
+fmt.Println("main: ready to leave")</pre></div>
+</div>
+<p>The comparison only goes so far. JS runs your code on one thread with an event loop. Goroutines are lightweight threads that Go schedules for you, and they can run in parallel (<a href="https://go.dev/tour/concurrency/1">Tour: Goroutines</a>).</p>
+
+<h2>The vocabulary</h2>
+<dl class="fields">
+  <dt>go f()</dt><dd>Starts <code>f</code> in a new goroutine and carries on at once, without waiting for it.</dd>
+  <dt>sync.WaitGroup</dt><dd>A counter of unfinished work. <code>Add(n)</code> registers work, <code>Done()</code> marks one piece finished, and <code>Wait()</code> blocks until the count reaches zero (<a href="https://pkg.go.dev/sync#WaitGroup">sync.WaitGroup</a>).</dd>
+  <dt>make(chan string)</dt><dd>Creates a channel: a pipe that carries values of one type between goroutines (<a href="https://go.dev/tour/concurrency/2">Tour: Channels</a>).</dd>
+  <dt>ch &lt;- v · v := &lt;-ch</dt><dd>Send a value, receive a value. The arrow shows which way the data flows.</dd>
+  <dt>close(ch) · for v := range ch</dt><dd>The sender closes the channel when it's finished. <code>range</code> keeps receiving until the channel is closed and empty (<a href="https://go.dev/tour/concurrency/4">Tour: Range and Close</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root, the folder that contains <code>go.mod</code>.</p>
+
+<div class="example">
+  <h3>01 · Start and wait for a goroutine</h3>
+  <p class="path">17-concurrency/01-goroutine/main.go</p>
+  <ul>
+    <li><code>Add(1)</code> comes <em>before</em> the <code>go</code> line, so the work is registered before it can possibly finish.</li>
+    <li><code>defer workers.Done()</code> uses Topic 14: it marks the work done however the function exits.</li>
+    <li><code>workers.Wait()</code> is what guarantees the order of the two lines. The code has no <code>sleep</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./17-concurrency/01-goroutine</pre>
+  <p class="label">Expect</p>
+  <pre>worker: packed lunch
+main: ready to leave</pre>
+  <p class="try"><strong>Try:</strong> change the worker's message. Check that it still prints before the main line.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Send, receive, and close</h3>
+  <p class="path">17-concurrency/02-channels/main.go</p>
+  <ul>
+    <li><code>sendLunches</code> runs in its own goroutine and sends two values, then closes the channel.</li>
+    <li>The channel is <strong>unbuffered</strong>: each send waits until <code>main</code> is ready to receive. That hand-off keeps the two goroutines in step.</li>
+    <li><code>for lunch := range lunches</code> ends by itself once the channel is closed. The sender closes it; the receiver never does.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./17-concurrency/02-channels</pre>
+  <p class="label">Expect</p>
+  <pre>received: sandwich
+received: fruit
+all lunches received</pre>
+  <p class="try"><strong>Try:</strong> send <code>"water"</code> before <code>close</code>. Predict the extra output line.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>Nothing is awaited automatically. When <code>main</code> returns, the program exits without waiting for other goroutines (<a href="https://go.dev/ref/spec#Program_execution">Go spec: Program execution</a>). Wait for them explicitly.</li>
+  <li>A goroutine isn't a Promise. <code>go f()</code> gives you no return value, so results travel back over a channel.</li>
+  <li>If you receive from a channel that nobody will ever send to, your code blocks forever. If every goroutine is stuck, Go stops with <code>all goroutines are asleep - deadlock!</code>.</li>
+  <li>Sending on a closed channel causes a panic. Only the sender should close (<a href="https://go.dev/tour/concurrency/4">Tour: Range and Close</a>).</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">In example 01, you delete <code>workers.Wait()</code>. What can happen?</p>
+  <div class="options">
+    <button>The build fails with an error</button>
+    <button>The worker line may not print</button>
+    <button>The worker line always prints first</button>
+  </div>
+  <p class="why">Without <code>Wait</code>, <code>main</code> can print and return before the goroutine runs. The program then exits without it.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">Who should close a channel?</p>
+  <div class="options">
+    <button>The goroutine that receives values</button>
+    <button>Nobody, channels close by themselves</button>
+    <button>The goroutine that sends values</button>
+  </div>
+  <p class="why">Only the sender knows when there's nothing left to send. A receiver that closed the channel could make the sender panic on its next send.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li><code>go f()</code> starts concurrent work. <code>main</code> won't wait unless you tell it to.</li>
+    <li>Use <code>sync.WaitGroup</code> when you only need to wait for work to finish.</li>
+    <li>Use a channel to pass values. The sender closes it, and <code>range</code> receives until it's closed.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/concurrency/1">A Tour of Go: Concurrency</a>, pages 1–4 (10 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="16-testing.html">← Topic 16 · Testing</a>
+  <a href="00-course-map.html">Course map →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

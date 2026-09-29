@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Everyday Standard Library</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 15 · 15-standard-library/ · ~7 min</p>
+<h1>Everyday standard library</h1>
+<p class="lede">This folder cleans up a messy shopping list using the <code>strings</code> package. By the end you'll know where Go keeps the text helpers that JS puts on string methods, and how to look up the rest yourself.</p>
+
+<h2>What this folder is for</h2>
+<p>Go ships with a large <strong>standard library</strong>, a set of packages that come with Go itself, so small jobs need no third-party dependencies (<a href="https://pkg.go.dev/std">Standard library index</a>). This topic shows one package in use. The skill to take away is the habit: <em>import the package, then call <code>package.Function</code></em>.</p>
+<div class="bridge wide">
+  <div><p class="label">JS/TS you know</p>
+<pre>const clean = "  Tea,Milk,Bread  "
+  .trim()
+  .toLowerCase();
+const items = clean.split(",");
+items.join(" | ");</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>clean := strings.TrimSpace("  Tea,Milk,Bread  ")
+clean = strings.ToLower(clean)
+items := strings.Split(clean, ",")
+strings.Join(items, " | ")</pre></div>
+</div>
+<p>In JS these are methods on the string. In Go they're <strong>functions in the <code>strings</code> package</strong> that take the string as their first argument and return a new string (<a href="https://pkg.go.dev/strings">strings package</a>).</p>
+
+<h2>The helpers in this example</h2>
+<dl class="fields">
+  <dt>strings.TrimSpace(s)</dt><dd>Returns <code>s</code> with whitespace at the start and end removed.</dd>
+  <dt>strings.ToLower(s)</dt><dd>Returns a lower-case copy of <code>s</code>.</dd>
+  <dt>strings.Split(s, sep)</dt><dd>Cuts <code>s</code> at each <code>sep</code> and returns a <code>[]string</code>, a slice of strings (Topic 07).</dd>
+  <dt>strings.Contains(s, sub)</dt><dd>Reports whether <code>sub</code> appears in <code>s</code>, as a <code>bool</code>. The match is case-sensitive.</dd>
+  <dt>strings.Join(items, sep)</dt><dd>The reverse of Split: glues a <code>[]string</code> together with <code>sep</code> between the items.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root, the folder that contains <code>go.mod</code>.</p>
+
+<div class="example">
+  <h3>01 · Cleaning a shopping list</h3>
+  <p class="path">15-standard-library/01-strings/main.go</p>
+  <ul>
+    <li>The <strong>grouped import</strong>: <code>import ( "fmt" "strings" )</code> is how Go imports more than one package.</li>
+    <li><code>clean = strings.ToLower(clean)</code> assigns the result back. The helper returns a new string. It doesn't change the old one in place.</li>
+    <li>The text is lower-cased <em>before</em> <code>Contains(clean, "milk")</code>. That's why the case-sensitive check finds <code>Milk</code>.</li>
+    <li><code>Println</code> prints a slice in square brackets with spaces between the items: <code>[tea milk bread]</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/01-strings</pre>
+  <p class="label">Expect</p>
+  <pre>items: [tea milk bread]
+has milk: true
+display: tea | milk | bread</pre>
+  <p class="try"><strong>Try:</strong> add <code>,Eggs</code> to the input string. Predict the <code>display:</code> line before you run it.</p>
+</div>
+
+<h2>Finding the next helper yourself</h2>
+<p>Every standard package has its own page at <code>pkg.go.dev/&lt;name&gt;</code>, with an index of functions and runnable examples. A few you'll meet soon:</p>
+<dl class="fields">
+  <dt>strconv</dt><dd>Converts between strings and numbers, like <code>Number("42")</code> in JS (<a href="https://pkg.go.dev/strconv">strconv</a>).</dd>
+  <dt>sort</dt><dd>Sorts slices, for example the map keys in Topic 08 (<a href="https://pkg.go.dev/sort">sort</a>).</dd>
+  <dt>os</dt><dd>Files, environment variables and command-line arguments (<a href="https://pkg.go.dev/os">os</a>).</dd>
+</dl>
+<p class="meta">Or from your terminal: <code>go doc strings.Split</code> prints the docs for a single function.</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>There are no string methods: <code>s.trim()</code> doesn't exist. Reach for <code>strings.TrimSpace(s)</code>.</li>
+  <li>Go strings can't be changed. Every helper returns a <strong>new</strong> string, so remember to use or assign the result.</li>
+  <li>Go's names don't always match JS's. JS <code>trim</code> is <code>TrimSpace</code> in Go; Go's <code>strings.Trim</code> needs a list of characters to cut.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q">Which call returns a <code>[]string</code>?</p>
+  <div class="options">
+    <button><code>strings.Join</code></button>
+    <button><code>strings.TrimSpace</code></button>
+    <button><code>strings.Split</code></button>
+  </div>
+  <p class="why"><code>Split</code> cuts one string into a slice of strings. <code>Join</code> goes the other way, and <code>TrimSpace</code> returns a single string.</p>
+</div>
+<div class="quiz" data-answer="1">
+  <p class="q">What does <code>strings.Contains("Tea,Milk", "milk")</code> return?</p>
+  <div class="options">
+    <button><code>true</code>, it ignores case</button>
+    <button><code>false</code>, it matches case</button>
+    <button>an error value instead</button>
+  </div>
+  <p class="why"><code>Contains</code> compares exactly, so <code>"milk"</code> doesn't match <code>"Milk"</code>. That's why the example lower-cases the text first.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Text helpers are functions in the <code>strings</code> package, not methods on the string.</li>
+    <li>They return new strings, so assign or use the result.</li>
+    <li>Look anything up at <code>pkg.go.dev/&lt;package&gt;</code> or with <code>go doc</code>.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://pkg.go.dev/strings">strings package documentation</a>. Skim the index and open the examples for <code>Split</code> and <code>Join</code> (5 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="14-defer.html">← Topic 14 · Defer</a>
+  <a href="16-testing.html">Topic 16 · Testing →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

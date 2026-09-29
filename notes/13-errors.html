@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go Errors</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 13 · 13-errors/ · ~8 min</p>
+<h1>Errors</h1>
+<p class="lede">This folder shows the most common pattern in all Go code: a function returns its result <em>and</em> an error, and the caller checks the error straight away. There's no try/catch.</p>
+
+<h2>What this folder is for</h2>
+<p>In Go, an expected failure is just a value that the function returns. You'll see <code>if err != nil</code> in nearly every Go file you open, so learning to read it quickly is a big win (<a href="https://go.dev/blog/error-handling-and-go">Go blog: Error handling and Go</a>).</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>try {
+  const each = share(8, 0);
+  console.log(each);
+} catch (e) {
+  console.log("cannot share:", e.message);
+}</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>each, err := share(8, 0)
+if err != nil {
+    fmt.Println("cannot share:", err)
+    return
+}
+fmt.Println(each)</pre></div>
+</div>
+<p>The error is part of the function's signature, <code>(int, error)</code>, so you can see which calls can fail without reading their code.</p>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>(int, error)</dt><dd>The function returns two values. By convention the error comes <strong>last</strong>.</dd>
+  <dt>error</dt><dd>A built-in interface with one method, <code>Error() string</code>. Any type with that method is an error (<a href="https://go.dev/tour/methods/19">Tour: Errors</a>). That's Topic 12 at work.</dd>
+  <dt>nil</dt><dd>"No error". If <code>err == nil</code>, the call worked.</dd>
+  <dt>errors.New("…")</dt><dd>Creates a simple error with a message (<a href="https://pkg.go.dev/errors#New">errors.New</a>).</dd>
+  <dt>if err != nil { … return }</dt><dd>Check right after the call. Handle the error, then <strong>stop</strong> before you use a result that isn't valid.</dd>
+  <dt>_</dt><dd>The blank identifier. It throws away a return value you don't need, as in <code>_, err = share(8, 0)</code>.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Returning and checking errors</h3>
+  <p class="path">13-errors/01-return-check/main.go</p>
+  <ul>
+    <li>In <code>share</code>, find the two <code>return</code> lines. The failure path returns <code>0, errors.New(…)</code>. The success path returns <code>apples / people, nil</code>.</li>
+    <li>In <code>main</code>, look at the shape <code>each, err := share(8, 2)</code> followed straight away by <code>if err != nil</code>.</li>
+    <li>The <code>return</code> inside that <code>if</code> leaves <code>main</code> early, so the code never uses a bad result.</li>
+    <li>The second call uses <code>_</code> for the result and <code>=</code> instead of <code>:=</code>, because <code>err</code> already exists.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./13-errors/01-return-check</pre>
+  <p class="label">Expect</p>
+  <pre>each: 4
+cannot share: people must be positive</pre>
+  <p class="try"><strong>Try:</strong> pass a negative number of people in the second call. Predict the output first.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Handling a library error</h3>
+  <p class="path">13-errors/02-parse/main.go</p>
+  <ul>
+    <li><code>strconv.Atoi</code> turns text into an int. It's like <code>parseInt</code>, but it returns <code>(int, error)</code> (<a href="https://pkg.go.dev/strconv#Atoi">strconv.Atoi</a>).</li>
+    <li>The standard library uses exactly the same value-plus-error pattern as your own code.</li>
+    <li>Where <code>parseInt("many")</code> gives you <code>NaN</code>, Go gives you a real error you have to deal with.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./13-errors/02-parse</pre>
+  <p class="label">Expect</p>
+  <pre>quantity: 12
+invalid quantity: "many"</pre>
+  <p class="try"><strong>Try:</strong> pass <code>"3.5"</code>. <code>Atoi</code> expects a whole number, so predict which branch runs.</p>
+</div>
+
+<h2>What about panic?</h2>
+<p>Go does have <code>panic</code>, which stops the program much like an uncaught exception. It's meant for bugs and truly impossible situations, such as dereferencing a nil pointer (Topic 11). For failures you <em>expect</em>, like bad input or a missing file, return an <code>error</code> (<a href="https://go.dev/doc/effective_go#errors">Effective Go: Errors</a>).</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>Nothing forces you to check <code>err</code>, but ignoring it is a bug. Read every <code>if err != nil</code> as "this is what happens when it fails".</li>
+  <li>When <code>err != nil</code>, the other return value is usually meaningless, like the <code>0</code> here. Don't use it.</li>
+  <li>Error messages are lowercase with no final full stop, for example <code>"people must be positive"</code>. That's because they often get joined into longer messages (<a href="https://go.dev/wiki/CodeReviewComments#error-strings">Go wiki: Error strings</a>).</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q">A call returns <code>result, err</code>. What does <code>err == nil</code> tell you?</p>
+  <div class="options">
+    <button>The result is also nil</button>
+    <button>The call panicked but continued</button>
+    <button>The call completed without failure</button>
+  </div>
+  <p class="why"><code>nil</code> means "no error", so the call worked and <code>result</code> is safe to use.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">Where does the <code>error</code> usually go in a Go function's results?</p>
+  <div class="options">
+    <button>It is the last value</button>
+    <button>It is the first value</button>
+    <button>It is thrown, not returned</button>
+  </div>
+  <p class="why">By convention the error is the last result, as in <code>(int, error)</code>. Go doesn't throw expected errors. It returns them.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>A function that can fail returns <code>(value, error)</code>. The error comes last.</li>
+    <li>Check <code>if err != nil</code> straight after the call, handle it, and return early.</li>
+    <li><code>error</code> is just an interface with <code>Error() string</code>. <code>nil</code> means success.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/error-handling-and-go">Go blog: Error handling and Go</a> (about 10 min). For a quick start, read <a href="https://go.dev/tour/methods/19">A Tour of Go: Errors</a>.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="12-interfaces.html">← Topic 12 · Interfaces</a>
+  <a href="14-defer.html">Topic 14 · Defer →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

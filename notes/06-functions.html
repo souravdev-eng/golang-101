@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Functions and Scope</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 06 · 06-functions/ · ~8 min</p>
+<h1>Functions and scope</h1>
+<p class="lede">This folder shows how Go functions take inputs, give back one or more results, accept any number of arguments, and live in variables. It ends with scope: which variable a name refers to inside a block.</p>
+
+<h2>What this folder is for</h2>
+<p>Functions in Go feel close to JS functions. The main difference is <strong>types</strong>. Every parameter and every result has a declared type, and it's written <em>after</em> the name (<a href="https://go.dev/tour/basics/4">Tour: Functions</a>).</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>function total(price: number,
+               quantity: number): number {
+  return price * quantity;
+}
+const cost = total(3, 4);</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>func total(price int, quantity int) int {
+    return price * quantity
+}
+
+cost := total(3, 4)</pre></div>
+</div>
+<p>In both versions the return type comes after the parameter list. Go has no colons and no <code>function</code> keyword, only <code>func</code>.</p>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>func name(p T) R</dt><dd>A parameter is a name followed by its type. The type after the <code>)</code> is the result type. Leave it out when the function returns nothing.</dd>
+  <dt>a, b int</dt><dd>When neighbouring parameters share a type, you can write the type once (<a href="https://go.dev/tour/basics/5">Tour: Functions continued</a>).</dd>
+  <dt>(int, int)</dt><dd>A function can return <strong>several results</strong>. The caller receives them in the same order: <code>each, left := f()</code> (<a href="https://go.dev/tour/basics/6">Tour: Multiple results</a>). Unlike JS, you don't wrap them in an array or object.</dd>
+  <dt>...int</dt><dd>A <strong>variadic</strong> parameter takes zero or more values. Inside the function it's a slice, <code>[]int</code> (<a href="https://go.dev/ref/spec#Passing_arguments_to_..._parameters">spec</a>). It works like JS rest parameters <code>...nums</code>.</dd>
+  <dt>func(x int) int { … }</dt><dd>A function with no name, an <strong>anonymous function</strong>. It's a value you can store in a variable and call later, just like an arrow function (<a href="https://go.dev/tour/moretypes/24">Tour: Function values</a>).</dd>
+  <dt>block scope</dt><dd>A variable exists from its declaration to the end of the nearest <code>{ }</code> (<a href="https://go.dev/ref/spec#Declarations_and_scope">spec: Declarations and scope</a>). That's the same as <code>let</code> in JS.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Parameters and return values</h3>
+  <p class="path">06-functions/01-parameters-returns/main.go</p>
+  <ul>
+    <li><code>greet</code> has no result type, so it just does something (prints).</li>
+    <li><code>total</code> ends its signature with <code>int</code>, so it must <code>return</code> an int.</li>
+    <li>In <code>main</code>, the result is stored with <code>:=</code>, exactly like in Topic 02.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./06-functions/01-parameters-returns</pre>
+  <p class="label">Expect</p>
+  <pre>Hello, Mira
+cost: 12</pre>
+  <p class="try"><strong>Try:</strong> call <code>greet</code> with your name and <code>total</code> with a different quantity.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Multiple return values</h3>
+  <p class="path">06-functions/02-multiple-returns/main.go</p>
+  <ul>
+    <li>The signature <code>(apples, people int) (int, int)</code> takes two ints and returns two ints.</li>
+    <li><code>return a, b</code> sends back both results. <code>each, left := …</code> receives them in order.</li>
+    <li><code>/</code> on ints drops the remainder and <code>%</code> gives the remainder, so 7 split among 3 gives 2 each with 1 left over.</li>
+    <li>This pattern matters later: Go functions usually report errors as an extra return value (Topic 13).</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./06-functions/02-multiple-returns</pre>
+  <p class="label">Expect</p>
+  <pre>each: 2 left: 1</pre>
+  <p class="try"><strong>Try:</strong> split 10 apples among 4 people. Predict both numbers first.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Variadic and anonymous functions</h3>
+  <p class="path">06-functions/03-variadic-anonymous/main.go</p>
+  <ul>
+    <li><code>sum(numbers ...int)</code> loops over <code>numbers</code> with <code>range</code>, because inside the function it's a slice.</li>
+    <li><code>sum()</code> with no arguments is allowed. The slice is empty, so the total stays <code>0</code>.</li>
+    <li><code>double := func(number int) int { … }</code> stores a function in a variable. You call it with <code>double(5)</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./06-functions/03-variadic-anonymous</pre>
+  <p class="label">Expect</p>
+  <pre>sum: 9
+empty sum: 0
+double: 10</pre>
+  <p class="try"><strong>Try:</strong> pass an extra value to <code>sum</code> and predict the result.</p>
+</div>
+
+<div class="example">
+  <h3>04 · Scope and shadowing</h3>
+  <p class="path">06-functions/04-scope/main.go</p>
+  <ul>
+    <li>Inside the first <code>if</code>, <code>message := "inside"</code> <strong>creates a new variable</strong> with the same name. This is called <em>shadowing</em>. The outer one isn't touched.</li>
+    <li>Inside the second <code>if</code>, <code>message = "updated"</code> uses plain <code>=</code>, so it changes the outer variable.</li>
+    <li>That one character, <code>:=</code> versus <code>=</code>, is the whole lesson.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./06-functions/04-scope</pre>
+  <p class="label">Expect</p>
+  <pre>outside
+inside
+outside
+updated</pre>
+  <p class="try"><strong>Try:</strong> change the first inner <code>:=</code> to <code>=</code>. Predict which lines change.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>Go has no default parameter values and no function overloading (<a href="https://go.dev/doc/faq#overloading">Go FAQ</a>). Every call passes every argument.</li>
+  <li>Accidental shadowing with <code>:=</code> inside an <code>if</code> or <code>for</code> is a classic Go bug. The code compiles, but the outer variable never changes.</li>
+  <li>If you don't need one of several results, you can't just ignore it. Receive it into the blank identifier <code>_</code>, for example <code>_, left := splitApples(7, 3)</code> (<a href="https://go.dev/doc/effective_go#blank">Effective Go: the blank identifier</a>).</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q">Inside <code>func sum(numbers ...int)</code>, what type is <code>numbers</code>?</p>
+  <div class="options">
+    <button>A plain <code>int</code> value</button>
+    <button>A <code>[3]int</code> array value</button>
+    <button>A <code>[]int</code> slice value</button>
+  </div>
+  <p class="why">A variadic parameter <code>...T</code> is seen as a <code>[]T</code> inside the function. That's why <code>sum</code> can use <code>range</code> on it.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q"><code>x := 1</code>, then inside <code>if true { x := 2 }</code>. What is <code>x</code> after the <code>if</code>?</p>
+  <div class="options">
+    <button>Still <code>1</code>, shadowed</button>
+    <button>Now <code>2</code>, updated</button>
+    <button>Compile error, redeclared</button>
+  </div>
+  <p class="why"><code>:=</code> inside the block declares a <em>new</em> <code>x</code> that disappears at the closing brace. The outer <code>x</code> is still 1. Redeclaring is only an error when it's in the <em>same</em> block.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Types come after names: <code>func f(a, b int) (int, int)</code>.</li>
+    <li>Multiple results are received in order. Use <code>_</code> to skip one you don't need.</li>
+    <li><code>...T</code> is a slice inside the function. Anonymous functions are values.</li>
+    <li><code>:=</code> in an inner block makes a new variable. <code>=</code> changes the existing one.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/basics/4">A Tour of Go: Functions</a>, pages 4–7 (5 min, runnable in the browser).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="05-loops.html">← Topic 05 · Loops</a>
+  <a href="07-collections.html">Topic 07 · Arrays and slices →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

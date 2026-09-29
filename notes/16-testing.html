@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testing</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 16 · 16-testing/ · ~8 min</p>
+<h1>Testing</h1>
+<p class="lede">This folder pairs a tiny function with its test. By the end you'll be able to find a Go project's tests, read one, and run it, all without installing a testing framework.</p>
+
+<h2>What this folder is for</h2>
+<p>Testing is built into Go: the <code>testing</code> package plus the <code>go test</code> command (<a href="https://pkg.go.dev/testing">testing package</a>). When you join a Go project, the tests usually sit right beside the code they check. Reading them is one of the fastest ways to learn what the code is meant to do.</p>
+<div class="bridge wide">
+  <div><p class="label">JS/TS you know (Jest)</p>
+<pre>// total.test.ts
+test("total", () =&gt; {
+  expect(total(3, 4)).toBe(12);
+});</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>// main_test.go
+func TestTotal(t *testing.T) {
+    got := Total(3, 4)
+    want := 12
+    if got != want {
+        t.Fatalf("Total(3, 4) = %d; want %d", got, want)
+    }
+}</pre></div>
+</div>
+<p>There's no <code>expect</code>. A Go test is ordinary code: compute a result, compare it with an <code>if</code>, and report a failure through <code>t</code>.</p>
+
+<h2>The conventions go test relies on</h2>
+<dl class="fields">
+  <dt>*_test.go</dt><dd>Test files end in <code>_test.go</code>. <code>go test</code> uses them; <code>go run</code> and <code>go build</code> leave them out (<a href="https://pkg.go.dev/cmd/go#hdr-Test_packages">go command: Test packages</a>).</dd>
+  <dt>func TestXxx(t *testing.T)</dt><dd>Each test is a function whose name starts with <code>Test</code> and that takes a <code>*testing.T</code>.</dd>
+  <dt>got / want</dt><dd>A common naming habit: <code>got</code> is what the code returned, <code>want</code> is the expected answer.</dd>
+  <dt>t.Errorf · t.Fatalf</dt><dd>Both mark the test as failed and print a message. <code>Errorf</code> lets the test keep going. <code>Fatalf</code> stops this test right there.</dd>
+  <dt>Same package</dt><dd>Here the test file also says <code>package main</code>, so it can call <code>Total</code> directly.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root, the folder that contains <code>go.mod</code>.</p>
+
+<div class="example">
+  <h3>01 · Total and its test</h3>
+  <p class="path">16-testing/01-total/main.go + main_test.go</p>
+  <ul>
+    <li>In <code>main.go</code>: <code>Total</code> is a plain function, and <code>main</code> only calls it and prints the result.</li>
+    <li>In <code>main_test.go</code>: the test calls <code>Total</code> just like any other caller would. No mocks, no framework.</li>
+    <li>The failure message shows both values, so a failing run tells you <em>what</em> went wrong.</li>
+  </ul>
+  <p class="label">Run the program</p>
+  <pre>go run ./16-testing/01-total</pre>
+  <p class="label">Expect</p>
+  <pre>cost: 12</pre>
+  <p class="label">Run the test</p>
+  <pre>go test ./16-testing/01-total -run '^TestTotal$' -v</pre>
+  <p class="label">Expect (timings and the package line vary)</p>
+  <pre>=== RUN   TestTotal
+--- PASS: TestTotal (0.00s)
+PASS
+ok  	github.com/sauravdev-eng/16-testing/01-total	…</pre>
+  <p class="try"><strong>Try:</strong> change <code>want</code> to <code>13</code> and run the test again. Read the failure message, then put <code>12</code> back.</p>
+</div>
+
+<h2>go test flags worth knowing</h2>
+<dl class="fields">
+  <dt>go test ./...</dt><dd>Runs the tests in every package of the module. Packages without tests show <code>[no test files]</code>.</dd>
+  <dt>-v</dt><dd>Verbose: prints each test's name and result, not just the package summary.</dd>
+  <dt>-run 'regex'</dt><dd>Runs only the tests whose names match the pattern.</dd>
+  <dt>(cached)</dt><dd>If nothing has changed, Go may reuse the last result and print <code>(cached)</code> (<a href="https://pkg.go.dev/cmd/go#hdr-Test_packages">go command docs</a>).</dd>
+</dl>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>There's no <code>expect(...).toBe(...)</code> built in. The comparison is a plain <code>if</code>, and <code>t.Errorf</code>/<code>t.Fatalf</code> do the reporting.</li>
+  <li>The name has to be <code>Test</code> followed by an uppercase letter (or nothing). <code>testTotal</code> or <code>CheckTotal</code> is silently skipped.</li>
+  <li>Tests live in the same folder as the code, not in a separate <code>__tests__</code> directory.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">Which function will <code>go test</code> run as a test?</p>
+  <div class="options">
+    <button><code>func CheckTotal(t *testing.T)</code></button>
+    <button><code>func TestTotal(t *testing.T)</code></button>
+    <button><code>func testTotal(t *testing.T)</code></button>
+  </div>
+  <p class="why">Test functions must be named <code>Test</code> followed by a capitalised name, and must take <code>*testing.T</code>.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">What is the difference between <code>t.Errorf</code> and <code>t.Fatalf</code>?</p>
+  <div class="options">
+    <button>Errorf stops the test; Fatalf keeps going</button>
+    <button>Both stop every test in the package</button>
+    <button>Fatalf stops the test; Errorf keeps going</button>
+  </div>
+  <p class="why">Both mark the test as failed. <code>Fatalf</code> also stops the current test straight away (<a href="https://pkg.go.dev/testing#T.Fatalf">testing: T.Fatalf</a>). Other tests still run.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Tests sit in <code>*_test.go</code> files next to the code, as <code>func TestXxx(t *testing.T)</code>.</li>
+    <li>Compare <code>got</code> with <code>want</code> using an <code>if</code>; report with <code>t.Errorf</code> or <code>t.Fatalf</code>.</li>
+    <li>Run them with <code>go test ./...</code>, adding <code>-v</code> and <code>-run</code> to focus.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/doc/tutorial/add-a-test">Go tutorial: Add a test</a> (10 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="15-standard-library.html">← Topic 15 · Standard library</a>
+  <a href="17-concurrency.html">Topic 17 · Goroutines and channels →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

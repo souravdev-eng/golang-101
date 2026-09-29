@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operators</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 03 · 03-operators/ · ~7 min</p>
+<h1>Operators</h1>
+<p class="lede">This folder shows how to calculate with numbers and build true-or-false expressions. Most of it will feel like JS. The value is in spotting the few places where Go is stricter.</p>
+
+<h2>What this folder is for</h2>
+<p>Operators are the glue inside every condition and loop you'll read next. The symbols mostly match JS. The big difference is that <strong>Go checks types</strong>, so there is no <code>===</code> versus <code>==</code> problem.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>7 / 2          // 3.5
+18 === 18      // true
+"18" == 18     // true (!)
+ok ? "yes" : "no"</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>7 / 2          // 3 (both ints)
+18 == 18       // true
+"18" == 18     // compile error
+// no ?: — use if/else</pre></div>
+</div>
+<p>Go has no ternary <code>?:</code> operator on purpose (<a href="https://go.dev/doc/faq#Does_Go_have_a_ternary_form">Go FAQ</a>).</p>
+
+<h2>The operators to recognise</h2>
+<dl class="fields">
+  <dt>+ - * /</dt><dd>Add, subtract, multiply, divide. With two <code>int</code>s, <code>/</code> drops the fraction.</dd>
+  <dt>%</dt><dd>Remainder after division. <code>7 % 2</code> is <code>1</code>.</dd>
+  <dt>+= -= ++ --</dt><dd>Update shortcuts. <code>x++</code> is a statement, so you can't write <code>y := x++</code> (<a href="https://go.dev/doc/faq#inc_dec">Go FAQ</a>).</dd>
+  <dt>== != &lt; &lt;= &gt; &gt;=</dt><dd>Comparisons. They give a <code>bool</code>. Both sides must have matching types.</dd>
+  <dt>&amp;&amp; || !</dt><dd>And, or, not. They work only on <code>bool</code> values.</dd>
+</dl>
+<p class="meta">Full list: <a href="https://go.dev/ref/spec#Operators">Go spec: Operators</a>.</p>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Arithmetic</h3>
+  <p class="path">03-operators/01-arithmetic/main.go</p>
+  <ul>
+    <li><code>apples, baskets := 7, 2</code> declares two variables in one line.</li>
+    <li>Division gives <code>3</code> and remainder gives <code>1</code>. Together they describe 7 ÷ 2.</li>
+    <li><code>+= 3</code> then <code>--</code>: 7 + 3 − 1 = 9.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./03-operators/01-arithmetic</pre>
+  <p class="label">Expect</p>
+  <pre>add: 9
+subtract: 5
+multiply: 14
+divide: 3
+remainder: 1
+updated: 9</pre>
+  <p class="try"><strong>Try:</strong> change <code>apples</code> to 8 and predict the remainder.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Comparisons and logic</h3>
+  <p class="path">03-operators/02-comparison-logic/main.go</p>
+  <ul>
+    <li><code>==</code> compares; <code>=</code> assigns. The comment on the first print line points this out.</li>
+    <li>Each comparison prints <code>true</code> or <code>false</code>.</li>
+    <li><code>&amp;&amp;</code> needs both sides true. <code>||</code> needs at least one. <code>!</code> flips.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./03-operators/02-comparison-logic</pre>
+  <p class="label">Expect</p>
+  <pre>equal: true
+different: false
+less: false at most: true
+greater: false at least: true
+can enter: true
+has access: true
+needs ticket: false</pre>
+  <p class="try"><strong>Try:</strong> set <code>hasTicket</code> to false and predict the last three lines.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>No truthy or falsy values. <code>!count</code> or <code>name &amp;&amp; …</code> won't compile unless the value is a <code>bool</code>.</li>
+  <li>No <code>?:</code>. Write a short <code>if/else</code> instead.</li>
+  <li><code>x++</code> can't be used inside another expression.</li>
+  <li>Comparing an <code>int</code> with a <code>float64</code> is a compile error. Convert one side first.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">What does <code>10 % 4</code> give?</p>
+  <div class="options">
+    <button>It gives 2.5</button>
+    <button>It gives 2</button>
+    <button>It gives 0</button>
+  </div>
+  <p class="why">10 ÷ 4 is 2 with 2 left over. <code>%</code> returns the part left over.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q"><code>count := 3</code>. Which line compiles in Go?</p>
+  <div class="options">
+    <button><code>if (count) { }</code></button>
+    <button><code>if !count { }</code></button>
+    <button><code>if count &gt; 0 { }</code></button>
+  </div>
+  <p class="why">A condition must be a <code>bool</code>. <code>count</code> is an <code>int</code>, so you compare it to get a <code>bool</code>.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>The symbols match JS, but both sides must have the same type.</li>
+    <li><code>/</code> on ints drops the fraction. <code>%</code> gives the remainder.</li>
+    <li>Logic operators work only on <code>bool</code>. There's no truthiness and no <code>?:</code>.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/ref/spec#Operators">Go spec: Operators</a>. Skim the precedence table and the arithmetic and comparison sections (about 5 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="02-values.html">← Topic 02 · Variables, constants, types</a>
+  <a href="04-conditions.html">Topic 04 · Conditions and switches →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

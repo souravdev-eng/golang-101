@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pointers and Changes</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 11 · 11-pointers/ · ~9 min</p>
+<h1>Pointers and changes</h1>
+<p class="lede">This folder answers one question: when I pass something to a function, can that function change my copy? In Go the answer is no, unless you pass a pointer.</p>
+
+<h2>What this folder is for</h2>
+<p>Go always passes arguments <strong>by value</strong>. The function gets a copy, just as an assignment would make one (<a href="https://go.dev/doc/faq#pass_by_value">Go FAQ: pass by value</a>). A <strong>pointer</strong> is a value that holds the <em>address</em> of another value. When you pass the pointer, the function can reach the original.</p>
+<div class="bridge wide">
+  <div><p class="label">JS/TS you know</p>
+<pre>// Objects are shared, so this changes the caller's object
+function bump(c: { value: number }) {
+  c.value++;
+}
+// Numbers are copied, so this does not
+function bumpNum(n: number) {
+  n++;
+}</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>// A struct is copied unless you pass a pointer
+func bump(c *Counter) {
+    c.Value++
+}
+func bumpCopy(c Counter) {
+    c.Value++ // changes the copy only
+}</pre></div>
+</div>
+<p>In JS the type decides whether something is shared. In Go <strong>you</strong> decide, by passing a value or a pointer to it.</p>
+
+<h2>The three symbols</h2>
+<dl class="fields">
+  <dt>*int</dt><dd>In a <em>type</em>, <code>*</code> means "pointer to". <code>*int</code> is a pointer to an int (<a href="https://go.dev/tour/moretypes/1">Tour: Pointers</a>).</dd>
+  <dt>&amp;count</dt><dd><code>&amp;</code> takes the address of a variable and gives you a pointer to it.</dd>
+  <dt>*count = …</dt><dd>On a pointer <em>value</em>, <code>*</code> reads or writes the thing it points to. This is called <strong>dereferencing</strong>.</dd>
+  <dt>nil</dt><dd>A pointer that points nowhere. It's the zero value of every pointer type. Dereferencing <code>nil</code> causes a runtime <strong>panic</strong>, which crashes the program.</dd>
+  <dt>func (c *Counter) Increment()</dt><dd>A <strong>pointer receiver</strong>. The method can change the struct it was called on (<a href="https://go.dev/tour/methods/4">Tour: Pointer receivers</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Values versus pointers</h3>
+  <p class="path">11-pointers/01-value-pointer/main.go</p>
+  <ul>
+    <li>Compare the two function signatures. <code>addToCopy(count int)</code> gets a copy. <code>addThroughPointer(count *int)</code> gets an address.</li>
+    <li>At the call site, look for <code>&amp;count</code>. The <code>&amp;</code> tells you this call might change <code>count</code>.</li>
+    <li>Inside, <code>*count = *count + 1</code> reads the value at the address, adds one, and writes it back.</li>
+    <li>The last lines show <code>var missing *int</code> is <code>nil</code>. Always check for nil before dereferencing.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./11-pointers/01-value-pointer</pre>
+  <p class="label">Expect</p>
+  <pre>after value: 3
+after pointer: 4
+missing: true</pre>
+  <p class="try"><strong>Try:</strong> call <code>addThroughPointer</code> twice and predict the count.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Pointer receiver methods</h3>
+  <p class="path">11-pointers/02-pointer-methods/main.go</p>
+  <ul>
+    <li>The two methods are the same except for one character: <code>(counter Counter)</code> versus <code>(counter *Counter)</code>.</li>
+    <li><code>IncrementCopy</code> changes a copy, so the caller sees no change. <code>Increment</code> changes the original.</li>
+    <li>Look at the call <code>counter.Increment()</code>. <code>counter</code> isn't a pointer, but Go takes its address for you (<a href="https://go.dev/tour/methods/6">Tour: Methods and pointer indirection</a>).</li>
+    <li>Inside the method, you write <code>counter.Value</code>, not <code>(*counter).Value</code>. Go follows the pointer for you.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./11-pointers/02-pointer-methods</pre>
+  <p class="label">Expect</p>
+  <pre>after value method: 3
+after pointer method: 4</pre>
+  <p class="try"><strong>Try:</strong> call <code>Increment</code> one more time and predict the output.</p>
+</div>
+
+<h2>How to choose</h2>
+<p>A simple rule while you're learning: if a method needs to <strong>change</strong> the struct, use a pointer receiver. The Tour adds a second reason: pointer receivers avoid copying large structs. It also says to keep all of one type's methods on the same kind of receiver (<a href="https://go.dev/tour/methods/8">Tour: Choosing a value or pointer receiver</a>).</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>A struct passed to a function is a <strong>copy</strong>, even though in JS an object would be shared. If you change the copy, the caller never sees it.</li>
+  <li><code>*</code> means two things. In a type (<code>*int</code>) it means "pointer to". In an expression (<code>*p</code>) it means "the value at". Read the context.</li>
+  <li>There's no pointer arithmetic like in C. You can't do <code>p + 1</code> (<a href="https://go.dev/tour/moretypes/1">Tour: Pointers</a>).</li>
+  <li>A nil pointer dereference is a crash, not <code>undefined</code>. It's the Go version of "cannot read properties of undefined".</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q"><code>x := 5</code>, then you call <code>addToCopy(x)</code>, which does <code>count++</code>. What is <code>x</code> afterwards?</p>
+  <div class="options">
+    <button>x becomes 6</button>
+    <button>x stays 5</button>
+    <button>x becomes nil</button>
+  </div>
+  <p class="why">The function got a copy of <code>x</code>. Only the copy went up. To change <code>x</code>, pass <code>&amp;x</code> to a function that takes <code>*int</code>.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">A method has to change a field of its struct. Which receiver should it use?</p>
+  <div class="options">
+    <button>A value receiver copy</button>
+    <button>No receiver at all</button>
+    <button>A pointer type receiver</button>
+  </div>
+  <p class="why">A pointer receiver such as <code>(c *Counter)</code> works on the original. A value receiver changes a copy, which is thrown away when the method returns.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Go passes everything by value. A function gets a copy.</li>
+    <li><code>&amp;x</code> gives you a pointer. <code>*p</code> reads or writes through it. The zero pointer is <code>nil</code>.</li>
+    <li>Use a pointer receiver when a method has to change its struct.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/moretypes/1">A Tour of Go: Pointers</a>, then <a href="https://go.dev/tour/methods/4">Pointer receivers</a> through <a href="https://go.dev/tour/methods/8">Choosing a value or pointer receiver</a>.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="10-structs.html">← Topic 10 · Structs and methods</a>
+  <a href="12-interfaces.html">Topic 12 · Interfaces →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

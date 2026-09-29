@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs and Output</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 01 · 01-programs/ · ~7 min</p>
+<h1>Programs and output</h1>
+<p class="lede">This folder shows the smallest complete Go program, and then the three ways to print. After this you can open any Go file, find where it starts, and read what it prints.</p>
+
+<h2>What this folder is for</h2>
+<p>Every other folder in this repo has the same shape as the code here. So this topic is really about <strong>recognising that shape</strong>. Once you know it you can skip past it and focus on what each example is actually teaching.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>// index.js runs top to bottom
+console.log("Hello, World!");</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}</pre></div>
+</div>
+<p>Go never runs loose statements at the top of a file. A program starts in the function <code>main</code>, which lives in the package <code>main</code> (<a href="https://go.dev/ref/spec#Program_execution">Go spec: Program execution</a>).</p>
+
+<h2>The four lines to recognise</h2>
+<dl class="fields">
+  <dt>package main</dt><dd>Says "this directory builds into a runnable program". Library code uses other package names.</dd>
+  <dt>import "fmt"</dt><dd>Like a JS <code>import</code>. <code>fmt</code> is the standard library's formatting and printing package. If you import something and never use it, the program won't compile.</dd>
+  <dt>func main() { … }</dt><dd>The entry point. It has no arguments and no return value. When it returns, the program ends.</dd>
+  <dt>fmt.Println(…)</dt><dd>You call a package's function as <code>package.Function</code>. It starts with a capital letter because only capitalised names are visible outside their package (<a href="https://go.dev/tour/basics/3">Tour: Exported names</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root, the folder that contains <code>go.mod</code>.</p>
+
+<div class="example">
+  <h3>01 · Hello World</h3>
+  <p class="path">01-programs/01-hello/main.go</p>
+  <ul>
+    <li>Find the three parts in this order: <code>package</code>, then <code>import</code>, then <code>func main</code>.</li>
+    <li>You'll see this exact skeleton at the top of every other example.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./01-programs/01-hello</pre>
+  <p class="label">Expect</p>
+  <pre>Hello, World!</pre>
+  <p class="try"><strong>Try:</strong> change the text in quotes, save, and run again.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Formatted output</h3>
+  <p class="path">01-programs/02-printing/main.go</p>
+  <ul>
+    <li><code>Print</code> writes the text and adds <em>no</em> newline.</li>
+    <li><code>Println</code> puts spaces between its arguments and adds a newline at the end, much like <code>console.log</code>.</li>
+    <li><code>Printf</code> fills in a template using <strong>verbs</strong>: <code>%s</code> for a string, <code>%d</code> for an integer, <code>%.2f</code> for a number with two decimals. It adds no newline, so you write <code>\n</code> yourself.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./01-programs/02-printing</pre>
+  <p class="label">Expect</p>
+  <pre>Shopping: apples 3
+apples: 3 items, 1.50 each</pre>
+  <p class="try"><strong>Try:</strong> change <code>%.2f</code> to <code>%.1f</code>. Predict the output before you run it.</p>
+</div>
+
+<h2>Printf verbs you'll meet in later folders</h2>
+<dl class="fields">
+  <dt>%v</dt><dd>Prints any value in its default format. When you're unsure, use this.</dd>
+  <dt>%T</dt><dd>Prints the value's <em>type</em>, for example <code>int</code> or <code>[]string</code>. Useful while you're learning.</dd>
+  <dt>%q</dt><dd>Prints a string with quotes around it, which makes spaces and empty strings visible.</dd>
+  <dt>%s · %d · %f</dt><dd>String, integer, floating-point number.</dd>
+</dl>
+<p class="meta">Full list: <a href="https://pkg.go.dev/fmt#hdr-Printing">fmt package: Printing</a>.</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>Strings take double quotes <code>"…"</code> or backticks. Single quotes <code>'a'</code> mean a single character (a <em>rune</em>, covered in Topic 09), not a string.</li>
+  <li>An unused import or an unused local variable is a <strong>compile error</strong>, not just a lint warning.</li>
+  <li>Your editor runs <code>gofmt</code>, which sets indentation, braces and spacing for you. There's no style to argue about.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">You rename <code>func main()</code> to <code>func start()</code> and run the program. What happens?</p>
+  <div class="options">
+    <button>It runs start as usual</button>
+    <button>The build reports an error</button>
+    <button>It runs and prints nothing</button>
+  </div>
+  <p class="why">A <code>package main</code> must declare a function named <code>main</code>. Without one the build fails before anything runs.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">Which call prints <code>a b</code> and then moves to a new line?</p>
+  <div class="options">
+    <button><code>fmt.Print("a", "b")</code></button>
+    <button><code>fmt.Printf("a b")</code></button>
+    <button><code>fmt.Println("a", "b")</code></button>
+  </div>
+  <p class="why"><code>Println</code> puts a space between its arguments and adds a newline. <code>Print</code> only adds spaces between two operands when neither is a string, so it prints <code>ab</code>. <code>Printf</code> needs an explicit <code>\n</code>.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>A runnable program is <code>package main</code> plus <code>func main()</code>.</li>
+    <li>Use <code>Println</code> for quick output and <code>Printf</code> with verbs for formatted output. Printf needs <code>\n</code>.</li>
+    <li>Run everything from the repo root with <code>go run ./folder/example</code>.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/doc/tutorial/getting-started#code">Go tutorial: Write some code</a> (5 min). Then do <a href="../lessons/0001-go-program-entry.html">Lesson 01</a> to practise.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="00-course-map.html">← Course map</a>
+  <a href="02-values.html">Topic 02 · Variables, constants, types →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

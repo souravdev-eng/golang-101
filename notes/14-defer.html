@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defer</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 14 · 14-defer/ · ~7 min</p>
+<h1>Defer</h1>
+<p class="lede">This folder shows how to schedule a call to run later, when the current function returns. By the end you'll be able to predict the order in which cleanup lines run.</p>
+
+<h2>What this folder is for</h2>
+<p>Real Go code often opens something (a file, a lock, a connection) and must close it again. <code>defer</code> lets you write the cleanup <strong>right next to</strong> the setup, and Go runs it at the end of the function for you. You'll see <code>defer</code> all over real projects, so it pays to read it fluently.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>function pack() {
+  console.log("start packing");
+  try {
+    console.log("packing done");
+  } finally {
+    console.log("close box");
+  }
+}</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>func pack() {
+    fmt.Println("start packing")
+    defer fmt.Println("close box")
+    fmt.Println("packing done")
+}</pre></div>
+</div>
+<p>Both print <code>close box</code> last. A deferred call runs just before the function that contains it returns (<a href="https://go.dev/ref/spec#Defer_statements">Go spec: Defer statements</a>).</p>
+
+<h2>The three rules</h2>
+<dl class="fields">
+  <dt>Runs at function return</dt><dd>The call waits until the <em>surrounding function</em> finishes. Not the end of a block or loop: the end of the function.</dd>
+  <dt>Last in, first out</dt><dd>Several defers stack up. The last one written runs first (<a href="https://go.dev/tour/flowcontrol/13">Tour: Stacking defers</a>).</dd>
+  <dt>Arguments are read now</dt><dd>The values passed to the deferred call are worked out at the <code>defer</code> line. Later changes to a variable don't affect them (<a href="https://go.dev/tour/flowcontrol/12">Tour: Defer</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root, the folder that contains <code>go.mod</code>.</p>
+
+<div class="example">
+  <h3>01 · Deferred call order</h3>
+  <p class="path">14-defer/01-order/main.go</p>
+  <ul>
+    <li>Three <code>defer</code> lines inside <code>pack</code>. Read them top to bottom, then expect them to run <strong>bottom to top</strong>.</li>
+    <li><code>label</code> is <code>"tea"</code> at its defer line and changes to <code>"coffee"</code> afterwards. The deferred line still prints <code>tea</code>: rule three.</li>
+    <li>All deferred lines finish before <code>back in main</code>, because they run as <code>pack</code> returns.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./14-defer/01-order</pre>
+  <p class="label">Expect</p>
+  <pre>start packing
+current label: coffee
+packing done
+label: tea
+put lid on
+close box
+back in main</pre>
+  <p class="try"><strong>Try:</strong> swap the first two <code>defer</code> lines. Predict the new cleanup order before you run it.</p>
+</div>
+
+<h2>Where you'll see it in real code</h2>
+<p>The usual pattern is "open, check the error, then defer the close" (<a href="https://go.dev/blog/defer-panic-and-recover">Go blog: Defer, Panic, and Recover</a>):</p>
+<pre>f, err := os.Open("list.txt")
+if err != nil {
+    return err
+}
+defer f.Close() // runs however this function returns</pre>
+<p>Errors are Topic 13. The point here is only the shape: the cleanup sits one line below the setup.</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li><code>defer</code> is tied to the <strong>function</strong>, not the <code>{ }</code> block. A <code>defer</code> inside a loop doesn't run each time round. They all pile up until the function returns.</li>
+  <li>The arguments are captured straight away. If you want the value at the <em>end</em>, the deferred call has to read the variable later, for example inside an anonymous function.</li>
+  <li>There's no <code>try</code>/<code>finally</code> in Go. <code>defer</code> is the tool that does that job.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">Three defers are written in the order A, B, C. In what order do they run?</p>
+  <div class="options">
+    <button>A, B, C</button>
+    <button>C, B, A</button>
+    <button>B, C, A</button>
+  </div>
+  <p class="why">Deferred calls are stacked: last in, first out. C was written last, so it runs first.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q"><code>label := "tea"</code>, then <code>defer fmt.Println(label)</code>, then <code>label = "coffee"</code>. What does the deferred call print?</p>
+  <div class="options">
+    <button><code>tea</code></button>
+    <button><code>coffee</code></button>
+    <button><code>teacoffee</code></button>
+  </div>
+  <p class="why">The argument <code>label</code> is evaluated at the defer line, while it still holds <code>"tea"</code>. The call itself runs later.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li><code>defer</code> schedules a call for when the surrounding function returns.</li>
+    <li>Several defers run in reverse order.</li>
+    <li>Arguments are evaluated at the defer line, not when the call runs.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/defer-panic-and-recover">Go blog: Defer, Panic, and Recover</a>. Read the first section, on defer (5 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="13-errors.html">← Topic 13 · Errors</a>
+  <a href="15-standard-library.html">Topic 15 · Standard library →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

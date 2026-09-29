@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Go program basics · Quick reference</title><link rel="stylesheet" href="../assets/course.css"></head><body><main>
+<header><div class="eyebrow">Go · Reference 01</div><h1>A runnable Go command</h1><nav><a href="../lessons/0001-go-program-entry.html">Return to lesson 01</a> · <a href="../notes/00-course-map.html">Course map</a></nav></header>
+<pre><code>package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Ready for Go!")
+}</code></pre>
+<table><thead><tr><th>Code</th><th>Purpose</th></tr></thead><tbody><tr><td><code>package main</code></td><td>Names the executable package.</td></tr><tr><td><code>import "fmt"</code></td><td>Makes the fmt package available in this file.</td></tr><tr><td><code>func main() { … }</code></td><td>Declares the command's entry function.</td></tr><tr><td><code>fmt.Println(…)</code></td><td>Prints values, separating arguments with spaces and ending with a newline.</td></tr></tbody></table>
+<p class="small">Sources: <a href="https://go.dev/doc/tutorial/getting-started#code">starter tutorial</a>, <a href="https://go.dev/ref/spec#Program_execution">entry-point rules</a>, <a href="https://pkg.go.dev/fmt#Println">Println behavior</a>.</p>
+<h2>Run from this repository's root</h2><pre><code>go run ./01-programs/01-hello</code></pre><p>Edit the greeting in <code>01-programs/01-hello/main.go</code>, save, and run again. Check the output against your prediction.</p>
+<h2 id="glossary">Glossary</h2><dl><dt>Package</dt><dd>A group of Go source files in one directory, sharing a package name.</dd><dt>Import</dt><dd>A declaration making another package available to a source file.</dd><dt>Entry function</dt><dd>The <code>main</code> function in package <code>main</code>, called after initialization.</dd><dt>Standard library</dt><dd>Packages supplied with Go, including <code>fmt</code>.</dd></dl>
+<p class="small">Definitions grounded in the <a href="https://go.dev/doc/tutorial/getting-started#code">official tutorial</a> and <a href="https://go.dev/ref/spec#Program_execution">language specification</a>.</p>
+<footer><p>Recall prompt: What does each <code>main</code> mean? Return to the <a href="../lessons/0001-go-program-entry.html#recall">lesson's practice</a> to check.</p></footer>
+</main><script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body></html>

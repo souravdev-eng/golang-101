@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conditions and Switches</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 04 · 04-conditions/ · ~8 min</p>
+<h1>Conditions and switches</h1>
+<p class="lede">This folder shows how Go picks which block of code runs. After this, you can read an <code>if</code> with a setup statement and a <code>switch</code> with no value, both of which are common in real Go code.</p>
+
+<h2>What this folder is for</h2>
+<p><code>if</code> and <code>switch</code> look almost like JS, but with less punctuation. There are <strong>no parentheses</strong> around the condition, and <strong>braces are always required</strong>.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>if (temp &lt; 15) {
+  coat();
+} else if (temp &lt; 25) jacket();
+
+switch (day) {
+  case "Sat": case "Sun":
+    weekend(); break;
+}</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>if temp &lt; 15 {
+    coat()
+} else if temp &lt; 25 {
+    jacket()
+}
+
+switch day {
+case "Sat", "Sun":
+    weekend() // no break needed
+}</pre></div>
+</div>
+<p>A Go <code>switch</code> stops after the matching case. You don't write <code>break</code> (<a href="https://go.dev/tour/flowcontrol/9">Tour: Switch</a>).</p>
+
+<h2>The patterns to recognise</h2>
+<dl class="fields">
+  <dt>if / else if / else</dt><dd>Checked top to bottom. The first true branch runs and the rest are skipped.</dd>
+  <dt>if a &amp;&amp; b</dt><dd>A combined condition, using the operators from Topic 03.</dd>
+  <dt>if x := f(); x &gt; 0 { }</dt><dd>An <strong>if with a short statement</strong>. <code>x</code> exists only inside this <code>if</code> and its <code>else</code> (<a href="https://go.dev/tour/flowcontrol/6">Tour: If with a short statement</a>).</dd>
+  <dt>switch value { case … }</dt><dd>Compares one value against each case. A case can list several values.</dd>
+  <dt>switch { case cond: }</dt><dd>A switch with no value. The first true case wins, so it works like a neat <code>if/else if</code> chain (<a href="https://go.dev/tour/flowcontrol/11">Tour: Switch with no condition</a>).</dd>
+  <dt>default</dt><dd>Runs when no case matches.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · If, else if, and else</h3>
+  <p class="path">04-conditions/01-if-else/main.go</p>
+  <ul>
+    <li>No parentheses around <code>temperature &lt; 15</code>.</li>
+    <li><code>else if</code> goes on the same line as the closing <code>}</code>.</li>
+    <li>24 is not below 15, but it is below 25. So the middle branch runs.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./04-conditions/01-if-else</pre>
+  <p class="label">Expect</p>
+  <pre>wear a light jacket</pre>
+  <p class="try"><strong>Try:</strong> set the temperature to 10, then 30, to reach the other branches.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Combined, nested, and initialized conditions</h3>
+  <p class="path">04-conditions/02-condition-patterns/main.go</p>
+  <ul>
+    <li>First <code>if</code>: two checks joined with <code>&amp;&amp;</code>.</li>
+    <li>Second: one <code>if</code> inside another. The inner check runs only when the outer one is true.</li>
+    <li>Third: <code>remaining := 10 - 3</code> is set up before the <code>;</code>, and then tested. You can't use <code>remaining</code> after the <code>if</code> ends.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./04-conditions/02-condition-patterns</pre>
+  <p class="label">Expect</p>
+  <pre>adult entry allowed
+young visitor discount
+seats left: 7</pre>
+  <p class="try"><strong>Try:</strong> set <code>hasTicket</code> to false and see which messages disappear.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Switch forms</h3>
+  <p class="path">04-conditions/03-switch/main.go</p>
+  <ul>
+    <li><code>case "Saturday", "Sunday":</code> puts two values in one case.</li>
+    <li>There's no <code>break</code> anywhere, yet only one case runs.</li>
+    <li>The second <code>switch</code> has no value. Each case is a full condition, and 82 first matches <code>score &gt;= 70</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./04-conditions/03-switch</pre>
+  <p class="label">Expect</p>
+  <pre>weekend
+good progress</pre>
+  <p class="try"><strong>Try:</strong> change <code>day</code> to <code>"Monday"</code> and <code>score</code> to 95.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>The condition must be a <code>bool</code>. <code>if name { }</code> doesn't compile when <code>name</code> is a string (<a href="https://go.dev/ref/spec#If_statements">Go spec: If statements</a>).</li>
+  <li>Braces are required, even for a one-line body.</li>
+  <li>Cases don't fall through. If you really want that, Go has an explicit <code>fallthrough</code> keyword, but you'll rarely see it (<a href="https://go.dev/ref/spec#Switch_statements">Go spec: Switch statements</a>).</li>
+  <li>A variable declared in <code>if x := …;</code> disappears after the <code>if/else</code> block.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q"><code>score := 95</code>. In the example's valueless switch, which line prints?</p>
+  <div class="options">
+    <button>It prints excellent only</button>
+    <button>It prints good progress</button>
+    <button>It prints both lines</button>
+  </div>
+  <p class="why"><code>score &gt;= 90</code> is the first true case, so it runs and the switch ends. There's no fall-through into the next case.</p>
+</div>
+<div class="quiz" data-answer="1">
+  <p class="q">After <code>if remaining := 7; remaining &gt; 0 { … }</code> ends, can you print <code>remaining</code>?</p>
+  <div class="options">
+    <button>Yes, it holds 7</button>
+    <button>No, compile error occurs</button>
+    <button>Yes, it holds 0</button>
+  </div>
+  <p class="why">A variable from the short statement exists only inside the <code>if</code> and its <code>else</code>. Outside, the name is undefined.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>No parentheses, braces always, and the condition must be a <code>bool</code>.</li>
+    <li><code>if x := …; cond</code> keeps a helper variable inside the <code>if</code>.</li>
+    <li><code>switch</code> needs no <code>break</code>. A valueless <code>switch</code> is a tidy if/else chain.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/flowcontrol/5">A Tour of Go: Flow control, pages 5–11</a> (if through switch, about 8 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="03-operators.html">← Topic 03 · Operators</a>
+  <a href="05-loops.html">Topic 05 · Loops →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go Interfaces</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 12 · 12-interfaces/ · ~7 min</p>
+<h1>Interfaces</h1>
+<p class="lede">This folder shows how different types can be used in the same place because they share the same method. It feels close to TypeScript's structural typing, but it's checked when you compile and it's based only on methods.</p>
+
+<h2>What this folder is for</h2>
+<p>An <strong>interface</strong> lists method signatures. Any type that has those methods can be used as that interface. You never write <code>implements</code> (<a href="https://go.dev/tour/methods/10">Tour: Interfaces are implemented implicitly</a>).</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>interface Greeter {
+  greeting(): string;
+}
+// Any object with greeting() fits
+function welcome(g: Greeter) {
+  console.log(g.greeting());
+}</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>type Greeter interface {
+    Greeting() string
+}
+// Any type with Greeting() fits
+func welcome(g Greeter) {
+    fmt.Println(g.Greeting())
+}</pre></div>
+</div>
+<p>They look almost the same. The big difference is that a Go interface describes <strong>behaviour only</strong>, meaning methods. It can't require fields, but TS interfaces can.</p>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>type Greeter interface { … }</dt><dd>A set of method signatures. A value of type <code>Greeter</code> can hold any value whose type has all of those methods (<a href="https://go.dev/tour/methods/9">Tour: Interfaces</a>).</dd>
+  <dt>Implicit satisfaction</dt><dd><code>Person</code> and <code>Robot</code> never mention <code>Greeter</code>. They each have a <code>Greeting() string</code> method, and that's enough.</dd>
+  <dt>Concrete type</dt><dd>The real type inside an interface value, such as <code>Person</code> or <code>Robot</code>. <code>welcome</code> doesn't know or care which one it got.</dd>
+  <dt>error</dt><dd>You'll use a built-in interface in the very next topic: <code>error</code> is an interface with one method, <code>Error() string</code> (<a href="https://go.dev/tour/methods/19">Tour: Errors</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Implicit interface satisfaction</h3>
+  <p class="path">12-interfaces/01-shared-behavior/main.go</p>
+  <ul>
+    <li>Read the file top to bottom: first the interface, then two unrelated types, then a function that only knows about the interface.</li>
+    <li><code>Person</code> has a field. <code>Robot struct{}</code> has none. Both fit <code>Greeter</code>, because only methods count.</li>
+    <li>Look for the word <code>implements</code>. It isn't there, because the matching method is enough.</li>
+    <li><code>welcome(guest Greeter)</code> calls <code>guest.Greeting()</code>. Each type's own method runs.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./12-interfaces/01-shared-behavior</pre>
+  <p class="label">Expect</p>
+  <pre>Hello, Mira
+Beep, hello</pre>
+  <p class="try"><strong>Try:</strong> change <code>Robot.Greeting</code> to return a different message. Then rename it to <code>Hello</code> and read the compile error. It tells you <code>Robot</code> no longer fits <code>Greeter</code>.</p>
+</div>
+
+<h2>Why Go works this way</h2>
+<p>Because a type doesn't have to declare that it satisfies an interface, you can write a small interface for just the behaviour your function needs, and existing types will fit it automatically. Go's standard library leans on this heavily with one-method interfaces such as <code>io.Reader</code> and <code>fmt.Stringer</code> (<a href="https://go.dev/doc/effective_go#interfaces">Effective Go: Interfaces</a>).</p>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>An interface can list methods only, never fields. <code>interface { Name string }</code> is not valid Go.</li>
+  <li>The method has to match exactly: same name, same parameter types, same result types. <code>Greeting() string</code> and <code>greeting() string</code> are different methods.</li>
+  <li>It's still checked when you compile. If you pass a type that's missing a method, the build fails with a message that names the missing method.</li>
+  <li>If a method has a pointer receiver, only the <em>pointer</em> type satisfies the interface. So you'd pass <code>&amp;thing</code>, not <code>thing</code> (<a href="https://go.dev/tour/methods/9">Tour: Interfaces</a>).</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">How does <code>Robot</code> come to satisfy <code>Greeter</code>?</p>
+  <div class="options">
+    <button>It says it implements Greeter</button>
+    <button>It has a Greeting method</button>
+    <button>It embeds the Greeter type</button>
+  </div>
+  <p class="why">Satisfaction is implicit. If a type has every method the interface lists, with matching signatures, it satisfies the interface. No keyword is needed.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">What can a Go interface require from a type?</p>
+  <div class="options">
+    <button>Only a set of methods</button>
+    <button>Only a set of fields</button>
+    <button>Both its methods and fields</button>
+  </div>
+  <p class="why">A Go interface describes behaviour, so it lists methods only. That's different from TS, where an interface can require properties too.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>An interface is a list of methods. Any type with those methods satisfies it.</li>
+    <li>There's no <code>implements</code> keyword, but the compiler still checks the match.</li>
+    <li>Functions that accept an interface work with any type that fits, now or in the future.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/methods/9">A Tour of Go: Interfaces</a> (pages 9–11). For the reasoning, read <a href="https://go.dev/doc/effective_go#interfaces">Effective Go: Interfaces</a>.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="11-pointers.html">← Topic 11 · Pointers</a>
+  <a href="13-errors.html">Topic 13 · Errors →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go Course Map</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Start here · ~3 min</p>
+<h1>Course map</h1>
+<p class="lede">This repo has 17 topic folders, and each one holds a few tiny runnable programs. Every folder has a short note like this one. Read the note first so you know what the code is trying to show you, and then open the code.</p>
+
+<h2>How to use a note</h2>
+<ol class="steps">
+  <li><strong>Read the note (7–10 min).</strong> It says what the folder is for, how it maps to JS/TS, and what to watch for in each example.</li>
+  <li><strong>Open the example's <code>main.go</code>.</strong> Look for the specific lines the note pointed out.</li>
+  <li><strong>Predict, then run.</strong> Guess the output first. Then run <code>go run ./NN-topic/NN-example</code> from the repo root and compare with the note's "Expect" block.</li>
+  <li><strong>Change one thing.</strong> Do the "Try" suggestion, predict again, and rerun.</li>
+  <li><strong>Check yourself.</strong> Answer the two questions at the end of the note without scrolling back up.</li>
+</ol>
+<div class="callout"><p>Order matters here. Each topic only uses ideas from the topics before it, so take them in sequence.</p></div>
+
+<h2>Foundations</h2>
+<p class="meta">How any Go program reads and flows.</p>
+<ul class="topics">
+  <li><a href="01-programs.html"><p class="label">01-programs/</p><strong>Programs and output</strong>Where a program starts; Print, Println, Printf.</a></li>
+  <li><a href="02-values.html"><p class="label">02-values/</p><strong>Variables, constants, types</strong>var vs :=, const, zero values, converting types.</a></li>
+  <li><a href="03-operators.html"><p class="label">03-operators/</p><strong>Operators</strong>Maths, comparisons, &&, ||, ! and integer division.</a></li>
+  <li><a href="04-conditions.html"><p class="label">04-conditions/</p><strong>Conditions and switches</strong>if / else if / else, if-with-init, switch forms.</a></li>
+  <li><a href="05-loops.html"><p class="label">05-loops/</p><strong>Loops</strong>One keyword, for, in several shapes; break, continue, range.</a></li>
+  <li><a href="06-functions.html"><p class="label">06-functions/</p><strong>Functions and scope</strong>Parameters, multiple returns, variadics, closures, shadowing.</a></li>
+</ul>
+
+<h2>Data</h2>
+<p class="meta">How Go stores and shapes data.</p>
+<ul class="topics">
+  <li><a href="07-collections.html"><p class="label">07-collections/</p><strong>Arrays and slices</strong>Fixed arrays vs growable slices; append, len, cap.</a></li>
+  <li><a href="08-maps.html"><p class="label">08-maps/</p><strong>Maps</strong>Key → value lookup, the “comma ok” check, sorted output.</a></li>
+  <li><a href="09-text.html"><p class="label">09-text/</p><strong>Strings, bytes, runes</strong>UTF-8 text: why len("é") is 2.</a></li>
+  <li><a href="10-structs.html"><p class="label">10-structs/</p><strong>Structs and methods</strong>Group fields into a type and attach behaviour.</a></li>
+  <li><a href="11-pointers.html"><p class="label">11-pointers/</p><strong>Pointers</strong>When a function should change the caller's value.</a></li>
+</ul>
+
+<h2>Everyday Go patterns</h2>
+<p class="meta">What you'll see in every real project.</p>
+<ul class="topics">
+  <li><a href="12-interfaces.html"><p class="label">12-interfaces/</p><strong>Interfaces</strong>Shared behaviour without “implements”.</a></li>
+  <li><a href="13-errors.html"><p class="label">13-errors/</p><strong>Errors</strong>Return an error value and check it; no try/catch.</a></li>
+  <li><a href="14-defer.html"><p class="label">14-defer/</p><strong>Defer</strong>Cleanup that runs when the function returns.</a></li>
+  <li><a href="15-standard-library.html"><p class="label">15-standard-library/</p><strong>Standard library</strong>The strings package: trim, split, join.</a></li>
+  <li><a href="16-testing.html"><p class="label">16-testing/</p><strong>Testing</strong>A _test.go file and go test, with no framework.</a></li>
+</ul>
+
+<h2>First look at concurrency</h2>
+<p class="meta">After the foundations.</p>
+<ul class="topics">
+  <li><a href="17-concurrency.html"><p class="label">17-concurrency/</p><strong>Goroutines and channels</strong>Run work concurrently and pass values safely.</a></li>
+</ul>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Note first, code second: the note tells you what to look for.</li>
+    <li>Predict, run, change, and run again.</li>
+    <li>Topics 01–06 are the core. Topics 12–16 are the patterns you'll see in every project.</li>
+  </ol>
+  <p><strong>Primary source for the whole course:</strong> <a href="https://go.dev/tour/">A Tour of Go</a>, the official interactive tour. Each note links to the right page of it.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <span></span>
+  <a href="01-programs.html">Topic 01 · Programs and output →</a>
+</nav>
+
+</main>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strings, Bytes, Runes</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 09 · 09-text/ · ~8 min</p>
+<h1>Strings, bytes, and runes</h1>
+<p class="lede">This folder shows what a Go string really is: a read-only sequence of <strong>bytes</strong>, usually holding UTF-8 text. You'll see why <code>len("café")</code> is 5, and how to work with whole characters (<strong>runes</strong>) instead.</p>
+
+<h2>What this folder is for</h2>
+<p>In JS, a string is a sequence of UTF-16 code units, and <code>"café".length</code> is 4. In Go, a string is a sequence of bytes, and <code>é</code> takes two of them in UTF-8 (<a href="https://go.dev/blog/strings">Go blog: Strings, bytes, runes and characters</a>). Once you know that, the behaviour in this folder makes sense.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const word = "café";
+word.length;        // 4
+word[0];            // "c" (a string)
+[...word].length;   // 4 code points</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>word := "café"
+len(word)           // 5 bytes
+word[0]             // 99 (a byte)
+len([]rune(word))   // 4 runes</pre></div>
+</div>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>string</dt><dd>Read-only bytes. You can't change a string in place. You build a new one instead (<a href="https://go.dev/ref/spec#String_types">spec: String types</a>).</dd>
+  <dt>byte</dt><dd>Another name for <code>uint8</code>, a number from 0 to 255. <code>len(s)</code> counts bytes, and <code>s[i]</code> gives a byte.</dd>
+  <dt>rune</dt><dd>Another name for <code>int32</code>. It holds one Unicode code point, such as <code>é</code> (<a href="https://go.dev/blog/strings">Go blog</a>).</dd>
+  <dt>'H'</dt><dd>Single quotes make a <strong>rune literal</strong>, one character. Double quotes make a string.</dd>
+  <dt>for i, r := range s</dt><dd>Decodes the string one rune at a time. <code>i</code> is the <strong>byte offset</strong> where that rune starts, not a character count (<a href="https://go.dev/ref/spec#For_range">spec: For range</a>).</dd>
+  <dt>[]byte(s) · []rune(s) · string(x)</dt><dd>Conversions. They make an editable <em>copy</em> of the text, and <code>string(x)</code> turns it back into a string.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Bytes and runes</h3>
+  <p class="path">09-text/01-bytes-runes/main.go</p>
+  <ul>
+    <li><code>len(word)</code> is <strong>5</strong>, not 4, because <code>é</code> takes 2 bytes.</li>
+    <li><code>word[0]</code> prints <code>99</code>, the byte value of <code>c</code>, not the letter.</li>
+    <li>In the <code>range</code> loop the offsets go 0, 1, 2, 3. If there were a character after <code>é</code>, its offset would be 5, because <code>é</code> covers bytes 3–4.</li>
+    <li><code>%c</code> prints a rune as a character.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./09-text/01-bytes-runes</pre>
+  <p class="label">Expect</p>
+  <pre>bytes: 5
+first byte: 99
+runes: 4
+byte 0: c
+byte 1: a
+byte 2: f
+byte 3: é</pre>
+  <p class="try"><strong>Try:</strong> set <code>word := "éa"</code> and predict the byte offset of <code>a</code>.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Editing copies of text</h3>
+  <p class="path">09-text/02-text-copies/main.go</p>
+  <ul>
+    <li><code>[]byte(greeting)</code> makes an editable copy. After the edit, <code>greeting</code> is still <code>hello</code>.</li>
+    <li>For non-ASCII text, edit a <code>[]rune</code> so you replace whole characters. Here <code>word[3]</code> is the whole <code>é</code>.</li>
+    <li><code>+</code> joins strings, just as in JS.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./09-text/02-text-copies</pre>
+  <p class="label">Expect</p>
+  <pre>original: hello
+edited: Hello
+rune edit: cafs
+joined: Hello Go</pre>
+  <p class="try"><strong>Try:</strong> set the final rune back to <code>'é'</code> and compare the result.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li><code>s[i]</code> is a <strong>number</strong> (a byte), not a one-letter string. Printing it shows a number like <code>99</code>.</li>
+  <li><code>len(s)</code> counts bytes. To count characters, use <code>len([]rune(s))</code> or <code>utf8.RuneCountInString(s)</code> (<a href="https://pkg.go.dev/unicode/utf8#RuneCountInString">unicode/utf8</a>).</li>
+  <li><code>s[0] = 'H'</code> doesn't compile, because strings are read-only. Convert to <code>[]byte</code> or <code>[]rune</code>, edit, then convert back.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q">What does <code>len("café")</code> return in Go?</p>
+  <div class="options">
+    <button>4, counting visible characters</button>
+    <button>5, counting encoded bytes</button>
+    <button>8, counting UTF-16 units</button>
+  </div>
+  <p class="why"><code>len</code> on a string counts bytes. In UTF-8, <code>c</code>, <code>a</code> and <code>f</code> take 1 byte each and <code>é</code> takes 2, so the total is 5.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">In <code>for i, r := range "éa"</code>, what is <code>i</code> when <code>r</code> is <code>'a'</code>?</p>
+  <div class="options">
+    <button>2, a byte offset</button>
+    <button>1, a rune count</button>
+    <button>0, a fresh index</button>
+  </div>
+  <p class="why"><code>range</code> gives the byte offset where each rune starts. <code>é</code> covers bytes 0–1, so <code>a</code> starts at byte 2.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>A string is read-only bytes (UTF-8). <code>len</code> and <code>s[i]</code> work on bytes.</li>
+    <li>A rune is one Unicode code point. <code>range</code> over a string gives runes along with their byte offsets.</li>
+    <li>To edit text, convert to <code>[]byte</code> or <code>[]rune</code> (a copy), then back with <code>string(…)</code>.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/strings">Go blog: Strings, bytes, runes and characters in Go</a> (12 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="08-maps.html">← Topic 08 · Maps</a>
+  <a href="10-structs.html">Topic 10 · Structs and methods →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

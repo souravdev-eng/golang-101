@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loops</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 05 · 05-loops/ · ~9 min</p>
+<h1>Loops</h1>
+<p class="lede">Go has one loop keyword: <code>for</code>. This folder shows its forms, how to skip or stop a loop, and how <code>range</code> walks through a collection.</p>
+
+<h2>What this folder is for</h2>
+<p>JS has <code>for</code>, <code>while</code>, <code>do…while</code>, <code>for…of</code> and <code>forEach</code>. In Go, <strong><code>for</code> does all of these jobs</strong> (<a href="https://go.dev/tour/flowcontrol/1">Tour: For</a>). Once you can tell its forms apart, you can read any Go loop.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>for (let i = 1; i &lt;= 3; i++) {}
+while (n &gt; 0) { n--; }
+while (true) { break; }
+fruits.forEach((f, i) =&gt; {});</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>for i := 1; i &lt;= 3; i++ {}
+for n &gt; 0 { n-- }
+for { break }
+for i, f := range fruits {}</pre></div>
+</div>
+
+<h2>The four forms to recognise</h2>
+<dl class="fields">
+  <dt>for init; cond; post { }</dt><dd>A counted loop. Like JS, but with no parentheses.</dd>
+  <dt>for cond { }</dt><dd>Only a condition. This is Go's <code>while</code> (<a href="https://go.dev/tour/flowcontrol/3">Tour: For is Go's "while"</a>).</dd>
+  <dt>for { }</dt><dd>Loops forever. Something inside must <code>break</code> or <code>return</code>.</dd>
+  <dt>for i, v := range xs { }</dt><dd>Gives the index and the value of each element. Use <code>_</code> for the part you don't need (<a href="https://go.dev/tour/moretypes/16">Tour: Range</a>).</dd>
+  <dt>break · continue</dt><dd><code>break</code> leaves the loop. <code>continue</code> skips to the next turn. Both act on the innermost loop only.</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Three forms of for</h3>
+  <p class="path">05-loops/01-for-forms/main.go</p>
+  <ul>
+    <li>Three loops in a row: counted, condition-only, and infinite with an exit.</li>
+    <li>In the counted loop, <code>step := 1</code> runs once, <code>step &lt;= 3</code> is checked before each turn, and <code>step++</code> runs after each turn.</li>
+    <li>The last loop has no condition. <code>if attempt == 2 { break }</code> ends it.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./05-loops/01-for-forms</pre>
+  <p class="label">Expect</p>
+  <pre>step: 1
+step: 2
+step: 3
+remaining: 2
+remaining: 1
+attempt: 1
+attempt: 2</pre>
+  <p class="try"><strong>Try:</strong> make the counted loop stop at 4.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Break and continue</h3>
+  <p class="path">05-loops/02-break-continue/main.go</p>
+  <ul>
+    <li>When <code>number</code> is 2, <code>continue</code> skips the print. The loop goes on.</li>
+    <li>When <code>number</code> is 5, <code>break</code> ends the loop. 5 and 6 never print.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./05-loops/02-break-continue</pre>
+  <p class="label">Expect</p>
+  <pre>number: 1
+number: 3
+number: 4</pre>
+  <p class="try"><strong>Try:</strong> change the break condition to <code>number == 6</code>.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Nested loops</h3>
+  <p class="path">05-loops/03-nested/main.go</p>
+  <ul>
+    <li>The inner loop (seats) runs all the way through for each turn of the outer loop (rows).</li>
+    <li>2 rows × 3 seats = 6 lines.</li>
+    <li>The final comment: a <code>break</code> in the inner loop only leaves the inner loop.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./05-loops/03-nested</pre>
+  <p class="label">Expect</p>
+  <pre>row 1 seat 1
+row 1 seat 2
+row 1 seat 3
+row 2 seat 1
+row 2 seat 2
+row 2 seat 3</pre>
+  <p class="try"><strong>Try:</strong> use two seats per row and predict the four lines.</p>
+</div>
+
+<div class="example">
+  <h3>04 · Range over a collection</h3>
+  <p class="path">05-loops/04-range/main.go</p>
+  <ul>
+    <li><code>[]string{…}</code> is a <strong>slice</strong>, which is Go's everyday list. Topic 07 covers it properly.</li>
+    <li><code>range</code> gives two values: the index (starting at 0) and the element.</li>
+    <li>The second loop uses <code>_</code> to ignore the index. Declaring <code>index</code> without using it would be a compile error.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./05-loops/04-range</pre>
+  <p class="label">Expect</p>
+  <pre>0 apple
+1 banana
+2 pear
+packed: apple
+packed: banana
+packed: pear</pre>
+  <p class="try"><strong>Try:</strong> add <code>"orange"</code> to the slice and run again.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>There is no <code>while</code> keyword. Write <code>for cond { }</code>.</li>
+  <li><code>range</code> gives the <em>index first</em>, then the value. <code>for fruit := range fruits</code> gives you the indexes, not the fruits.</li>
+  <li>To leave an outer loop from inside an inner one, Go uses a <strong>label</strong>: <code>break outer</code> (<a href="https://go.dev/ref/spec#Break_statements">Go spec: Break statements</a>).</li>
+  <li>Since Go 1.22, which this repo uses, each turn of a loop gets its own copy of the loop variable, and you can write <code>for i := range 3</code> (<a href="https://go.dev/doc/go1.22#language">Go 1.22 release notes</a>). Older tutorials may say otherwise.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q">In <code>for i, v := range []string{"a", "b"}</code>, what is <code>i</code> on the first turn?</p>
+  <div class="options">
+    <button>It is "a"</button>
+    <button>It is 1</button>
+    <button>It is 0</button>
+  </div>
+  <p class="why"><code>range</code> gives the index first, and indexes start at 0. <code>v</code> is <code>"a"</code>.</p>
+</div>
+<div class="quiz" data-answer="1">
+  <p class="q">A loop counts 1 to 5. It calls <code>continue</code> at 3. What prints?</p>
+  <div class="options">
+    <button>It prints 1 2 3 4 5</button>
+    <button>It prints 1 2 4 5</button>
+    <button>It prints 1 2 3 4</button>
+  </div>
+  <p class="why"><code>continue</code> skips only the rest of that turn. The loop carries on with 4 and 5.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li><code>for</code> is Go's only loop. It can be counted, condition-only, or infinite.</li>
+    <li><code>range</code> gives index then value. Use <code>_</code> to ignore one of them.</li>
+    <li><code>break</code> and <code>continue</code> affect the innermost loop only.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/flowcontrol/1">A Tour of Go: Flow control, pages 1–4</a>, plus <a href="https://go.dev/tour/moretypes/16">Range</a> (about 6 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="04-conditions.html">← Topic 04 · Conditions and switches</a>
+  <a href="06-functions.html">Topic 06 · Functions and scope →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

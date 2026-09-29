@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maps</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 08 · 08-maps/ · ~7 min</p>
+<h1>Maps</h1>
+<p class="lede">This folder shows Go's key–value store, the <strong>map</strong>. You'll look up, insert, update and delete keys. You'll also learn to tell "missing" apart from "zero", and why map output needs sorting.</p>
+
+<h2>What this folder is for</h2>
+<p>A Go map works like a JS <code>Map</code>, or an object used as a dictionary. The difference is that every key has the same type and every value has the same type, and both are written into the map's type (<a href="https://go.dev/blog/maps">Go blog: Go maps in action</a>).</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const stock = new Map&lt;string, number&gt;(
+  [["apples", 3]]);
+stock.set("pears", 2);
+stock.get("kiwi");   // undefined
+stock.has("kiwi");   // false
+stock.delete("pears");</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>stock := map[string]int{"apples": 3}
+stock["pears"] = 2
+stock["kiwi"]            // 0 (zero value)
+_, ok := stock["kiwi"]   // ok == false
+delete(stock, "pears")</pre></div>
+</div>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>map[string]int</dt><dd>A map from <code>string</code> keys to <code>int</code> values. You can create one with a literal <code>{…}</code> or with <code>make(map[string]int)</code>.</dd>
+  <dt>m[key] = v</dt><dd>The same syntax inserts a new key or updates an existing one.</dd>
+  <dt>m[key]</dt><dd>Reading a missing key doesn't fail. It returns the value type's <strong>zero value</strong>, so <code>0</code> for int (<a href="https://go.dev/blog/maps">Go blog</a>).</dd>
+  <dt>v, ok := m[key]</dt><dd>The <strong>"comma ok"</strong> form. <code>ok</code> is <code>true</code> only when the key is really there (<a href="https://go.dev/tour/moretypes/22">Tour: Mutating maps</a>).</dd>
+  <dt>delete(m, key) · len(m)</dt><dd>Removes a key (deleting one that isn't there is fine), and counts the keys.</dd>
+  <dt>for k := range m</dt><dd>Visits every key. The order is <strong>not specified</strong> and can change from run to run (<a href="https://go.dev/ref/spec#For_range">spec: For statements with range</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Lookup, update, and deletion</h3>
+  <p class="path">08-maps/01-lookup-update/main.go</p>
+  <ul>
+    <li>Follow the map's contents line by line: <code>apples</code> becomes 5, <code>oranges</code> is added, <code>pears</code> is deleted.</li>
+    <li><code>pears</code> and <code>bananas</code> both print <code>0</code>. Only <code>exists</code> shows that one is missing and the other is really stored as 0.</li>
+    <li>At the end <code>len</code> is 3: apples, oranges, bananas.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./08-maps/01-lookup-update</pre>
+  <p class="label">Expect</p>
+  <pre>apples: 3
+pears: 0 exists: false
+bananas: 0 exists: true
+keys: 3</pre>
+  <p class="try"><strong>Try:</strong> delete <code>bananas</code> before its lookup and compare the result.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Map creation and ordered output</h3>
+  <p class="path">08-maps/02-iteration/main.go</p>
+  <ul>
+    <li><code>make(map[string]int)</code> creates an empty map you can write to.</li>
+    <li>The recipe for stable output: collect the keys into a slice, sort it with <code>sort.Strings</code>, then loop over the sorted keys.</li>
+    <li>Note the <code>import ( … )</code> block. That's how you import more than one package.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./08-maps/02-iteration</pre>
+  <p class="label">Expect</p>
+  <pre>apples 3
+pears 2</pre>
+  <p class="try"><strong>Try:</strong> add <code>bananas</code> with a count of 4 and predict where it appears.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>A map declared with only <code>var m map[string]int</code> is <code>nil</code>. Reading it works, but <strong>writing to it panics</strong>. Create it with <code>make</code> or a literal first (<a href="https://go.dev/blog/maps">Go blog</a>).</li>
+  <li>Don't use <code>m[key] == 0</code> to test whether a key exists. Use <code>_, ok := m[key]</code>.</li>
+  <li>JS <code>Map</code> keeps insertion order. Go maps don't keep any order, so sort the keys whenever the order matters.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q"><code>m := map[string]int{}</code>. What does <code>fmt.Println(m["kiwi"])</code> do?</p>
+  <div class="options">
+    <button>Panics at run time</button>
+    <button>Prints the word nil</button>
+    <button>Prints the number 0</button>
+  </div>
+  <p class="why">A missing key returns the value type's zero value. For <code>int</code> that's <code>0</code>. Use <code>v, ok :=</code> to find out whether the key was there.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">You range over a map and print each key. What order do the keys come in?</p>
+  <div class="options">
+    <button>No order is guaranteed</button>
+    <button>Their insertion order preserved</button>
+    <button>Sorted alphabetically by key</button>
+  </div>
+  <p class="why">The language spec leaves map iteration order unspecified. Collect the keys, sort them, then loop over them.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li><code>map[K]V</code>, where <code>m[k] = v</code> inserts or updates, and <code>delete(m, k)</code> removes.</li>
+    <li>Missing keys give the zero value. <code>v, ok := m[k]</code> tells you whether the key exists.</li>
+    <li>Iteration order is random, so sort the keys for stable output. Write only to maps made with <code>make</code> or a literal.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/maps">Go blog: Go maps in action</a> (8 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="07-collections.html">← Topic 07 · Arrays and slices</a>
+  <a href="09-text.html">Topic 09 · Strings, bytes, runes →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

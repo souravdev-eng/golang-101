@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variables, Constants, Types</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 02 · 02-values/ · ~8 min</p>
+<h1>Variables, constants, and types</h1>
+<p class="lede">This folder shows how Go stores a value, changes it, and keeps track of its type. After this, you can read any declaration line and know its type and starting value.</p>
+
+<h2>What this folder is for</h2>
+<p>In JS a variable can hold anything. In Go, <strong>every variable has one fixed type</strong>, chosen when it is declared. Go often works out the type for you, so the code still looks light.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>let apples = 3;
+const shop = "Corner shop";
+apples = 5;
+let count; // undefined</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>apples := 3
+const shop = "Corner shop"
+apples = 5
+var count int // 0, not undefined</pre></div>
+</div>
+<p>There is no <code>undefined</code>. A variable with no value gets its type's <strong>zero value</strong> (<a href="https://go.dev/tour/basics/12">Tour: Zero values</a>).</p>
+
+<h2>The ideas to recognise</h2>
+<dl class="fields">
+  <dt>var x int = 3</dt><dd>Declares a variable and names its type.</dd>
+  <dt>var x = 3</dt><dd>Same, but Go infers the type from the value.</dd>
+  <dt>x := 3</dt><dd>Short declaration. It declares <em>and</em> sets a new variable. It works only inside functions (<a href="https://go.dev/tour/basics/10">Tour: Short variable declarations</a>).</dd>
+  <dt>x = 5</dt><dd>Plain <code>=</code> changes a variable that already exists.</dd>
+  <dt>const</dt><dd>A fixed value. You can't assign to it later, and it never uses <code>:=</code>.</dd>
+  <dt>zero values</dt><dd><code>0</code> for numbers, <code>false</code> for bool, <code>""</code> for string.</dd>
+  <dt>T(x)</dt><dd>Conversion, for example <code>float64(total)</code>. Go never converts between number types for you (<a href="https://go.dev/tour/basics/13">Tour: Type conversions</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Declarations and assignment</h3>
+  <p class="path">02-values/01-variables/main.go</p>
+  <ul>
+    <li>Three ways to declare: <code>var</code> with a type, <code>var</code> without one, and <code>:=</code>.</li>
+    <li>Spot the difference between <code>:=</code> (new variable) and <code>=</code> (update).</li>
+    <li><code>baskets++</code> adds one. In Go it is a statement on its own line.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./02-values/01-variables</pre>
+  <p class="label">Expect</p>
+  <pre>Corner shop
+apples: 5 baskets: 3</pre>
+  <p class="try"><strong>Try:</strong> change the starting number of baskets and predict the final count.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Constants</h3>
+  <p class="path">02-values/02-constants/main.go</p>
+  <ul>
+    <li>One constant sits outside <code>main</code>, at package level. Another sits inside <code>main</code>.</li>
+    <li>Both work in arithmetic like normal numbers.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./02-values/02-constants</pre>
+  <p class="label">Expect</p>
+  <pre>days: 14</pre>
+  <p class="try"><strong>Try:</strong> change <code>weeks</code> to 3 and predict the number of days.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Basic types and zero values</h3>
+  <p class="path">02-values/03-types-zero/main.go</p>
+  <ul>
+    <li>Four variables are declared with no value. The first line prints their zero values.</li>
+    <li><code>%q</code> adds quotes, so the empty string shows as <code>""</code>.</li>
+    <li><code>%T</code> prints each type: <code>int</code>, <code>float64</code>, <code>bool</code>, <code>string</code>.</li>
+    <li>One line sets four variables at once: <code>a, b = 1, 2</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./02-values/03-types-zero</pre>
+  <p class="label">Expect</p>
+  <pre>zero: 0 0.0 false ""
+types: int float64 bool string
+2 3.5 true tea</pre>
+  <p class="try"><strong>Try:</strong> give <code>ready</code> a true value before the first print line.</p>
+</div>
+
+<div class="example">
+  <h3>04 · Type conversion</h3>
+  <p class="path">02-values/04-conversion/main.go</p>
+  <ul>
+    <li><code>7 / 2</code> with two <code>int</code>s gives <code>3</code>. The fraction is dropped.</li>
+    <li>Convert both sides with <code>float64(…)</code> to keep the fraction.</li>
+    <li><code>int(3.5)</code> goes back to <code>3</code>. It drops the fraction; it doesn't round.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./02-values/04-conversion</pre>
+  <p class="label">Expect</p>
+  <pre>whole share: 3
+decimal share: 3.5
+back to int: 3</pre>
+  <p class="try"><strong>Try:</strong> change <code>total</code> to 9 and predict both division results.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>JS has one <code>number</code> type. Go has separate <code>int</code> and <code>float64</code>, and you can't mix them in one expression without converting.</li>
+  <li><code>:=</code> can't be used outside a function. At package level, use <code>var</code>.</li>
+  <li>A local variable you declare but never use is a compile error.</li>
+  <li>Once a variable is an <code>int</code>, you can't put a string in it later.</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="2">
+  <p class="q">What does <code>var total float64</code> hold before anything is assigned?</p>
+  <div class="options">
+    <button>The value undefined</button>
+    <button>The value nil</button>
+    <button>The value 0</button>
+  </div>
+  <p class="why">Every Go type has a zero value. For numbers it is <code>0</code>. Go has no <code>undefined</code>.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q"><code>a := 7</code> and <code>b := 2</code>. What is <code>a / b</code>?</p>
+  <div class="options">
+    <button>It is 3</button>
+    <button>It is 3.5</button>
+    <button>It is 4</button>
+  </div>
+  <p class="why">Both are <code>int</code>, so this is integer division and the fraction is dropped. Use <code>float64(a) / float64(b)</code> to get 3.5.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Use <code>:=</code> to declare a new variable and <code>=</code> to update one.</li>
+    <li>Every variable has one type, and it starts at its zero value.</li>
+    <li>Go never converts between number types on its own. You write <code>float64(x)</code>.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/tour/basics/8">A Tour of Go: Basics, pages 8–16</a> (variables through constants, about 10 min).</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="01-programs.html">← Topic 01 · Programs and output</a>
+  <a href="03-operators.html">Topic 03 · Operators →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

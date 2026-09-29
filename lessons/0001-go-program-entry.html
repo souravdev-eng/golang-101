@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>01 · Find Go's entry point</title><link rel="stylesheet" href="../assets/course.css"><script src="../assets/practice.js" defer></script></head>
+<body><main>
+<header><div class="eyebrow">Go for a JS/TS developer · Lesson 01 · 7 minutes</div><h1>Find the entry point.<br>Run your first change.</h1><p>Your first win for a future Go project: recognize where a command starts and verify a small change yourself.</p><nav><a href="../reference/go-program-basics.html">Quick reference &amp; glossary</a> · <a href="../notes/01-programs.html">Topic 01 note</a></nav></header>
+<section aria-labelledby="shape"><h2 id="shape">1. Read the shape</h2>
+<div class="pair"><div><p class="small">Familiar JavaScript call</p><pre><code>console.log("Hello, World!");</code></pre></div><div><p class="small">Go command</p><pre><code>package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}</code></pre></div></div>
+<p>Use the familiar function call as a bridge. In Go, <code>package main</code> identifies the executable package, and <code>func main()</code> declares its entry function. Go initializes the program, then calls that function. <a href="https://go.dev/ref/spec#Program_execution">Source: program execution</a>.</p>
+<p><code>import "fmt"</code> makes this standard-library package available; <code>fmt.Println</code> calls its printing function. It writes the greeting and adds a newline. <a href="https://pkg.go.dev/fmt#Println">Source: Println</a>.</p>
+<p><code>func</code> introduces a function, and the braces contain its body. Here <code>main</code> has no parameters or return value. <a href="https://go.dev/doc/tutorial/getting-started#code">Source: official starter tutorial</a>.</p></section>
+<section aria-labelledby="run"><h2 id="run">2. Run, change, verify</h2><p>From the repository root, run the existing example:</p><pre><code>go run ./01-programs/01-hello</code></pre><p>Expected output:</p><pre><code>Hello, World!</code></pre><p>Open <a href="../01-programs/01-hello/main.go"><code>01-programs/01-hello/main.go</code></a>. Change only the quoted text to <code>Ready for Go!</code>, save, and rerun the same command. You should see your new greeting.</p><p class="small">The browser practice below checks your predictions. Actual Go execution happens in your terminal.</p></section>
+<section aria-labelledby="recall"><h2 id="recall">3. Close the example. Recall the rule.</h2>
+<form data-practice="choice"><fieldset><legend>If you rename only <code>func main()</code> to <code>func start()</code>, what happens when you run this command?</legend>
+<label><input type="radio" name="entry" data-feedback="Correct. This executable package needs a function named main. Restore that name and rerun."> Build fails</label>
+<label><input type="radio" name="entry" data-feedback="Try again. A function named start does not replace the required main entry function."> Build works</label><button type="submit">Check reasoning</button><p class="feedback" role="status" aria-live="polite"></p></fieldset></form>
+<p>Now predict the output of these two statements inside <code>main</code>:</p><pre><code>fmt.Println("Starting")
+fmt.Println("Ready")</code></pre>
+<form data-practice="output" data-expected="Starting&#10;Ready" data-success="Correct. The first call prints Starting, then the second prints Ready on the next line."><label for="prediction">Type the two output lines</label><textarea id="prediction" spellcheck="false"></textarea><button type="submit">Check output</button><p class="feedback" role="status" aria-live="polite"></p></form>
+<details><summary>Reveal output after trying</summary><pre><code>Starting
+Ready</code></pre></details></section>
+<section aria-labelledby="later"><h2 id="later">4. Make it stick</h2><p>Tomorrow, before opening the reference, recall the two places where <code>main</code> appears and explain what each does. Then write the program shape from memory and compare it with the example.</p><p><strong>Primary reading:</strong> the official <a href="https://go.dev/doc/tutorial/getting-started#code">“Write some code” tutorial section</a>. Read through the first run; this repository already has <code>go.mod</code>.</p></section>
+<footer><p>Ask me followup questions whenever something is unclear. To continue, send your explanation of <code>package main</code> versus <code>func main()</code>, plus the greeting you ran.</p><p class="small">Next in the existing sequence: <a href="../01-programs/README.md">formatted output</a>. Review: <a href="../reference/go-program-basics.html#glossary">program glossary</a>.</p></footer>
+</main><script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body></html>

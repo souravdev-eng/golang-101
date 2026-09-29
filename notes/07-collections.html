@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrays and Slices</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 07 · 07-collections/ · ~9 min</p>
+<h1>Arrays and slices</h1>
+<p class="lede">This folder shows Go's two kinds of ordered list: the fixed-size <strong>array</strong> and the flexible <strong>slice</strong>. Slices are the one you'll use nearly all the time. The key idea is that a slice is a <em>view</em> onto an array that sits underneath it.</p>
+
+<h2>What this folder is for</h2>
+<p>A JS array does everything. Go splits that job in two. An array has a length fixed as part of its type. A slice is a small description (start, length, capacity) of part of an array, and it can grow with <code>append</code> (<a href="https://go.dev/blog/slices-intro">Go blog: Slices intro</a>).</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const fruits = ["apple", "banana"];
+fruits.push("pear");
+const part = fruits.slice(0, 2); // a copy
+fruits.length;</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>fruits := []string{"apple", "banana"}
+fruits = append(fruits, "pear")
+part := fruits[0:2] // shares memory!
+len(fruits)</pre></div>
+</div>
+<p>Watch the comments. JS <code>.slice()</code> copies, but Go's <code>fruits[0:2]</code> <strong>shares</strong> the same underlying elements.</p>
+
+<h2>Key ideas</h2>
+<dl class="fields">
+  <dt>[3]int{…}</dt><dd>An <strong>array</strong>. The number in brackets is part of the type, so <code>[3]int</code> and <code>[4]int</code> are different types. Assigning an array to a new variable <strong>copies every element</strong>.</dd>
+  <dt>[]string{…}</dt><dd>A <strong>slice</strong>. The brackets are empty. This is Go's everyday list (<a href="https://go.dev/tour/moretypes/7">Tour: Slices</a>).</dd>
+  <dt>s[low:high]</dt><dd>Makes a new slice from index <code>low</code> up to, but not including, <code>high</code>. Leave out <code>low</code> to start at 0, or <code>high</code> to go to the end. The new slice shares elements with the original (<a href="https://go.dev/tour/moretypes/8">Tour: Slices are like references</a>).</dd>
+  <dt>len(s) · cap(s)</dt><dd><strong>Length</strong> is how many elements you can see. <strong>Capacity</strong> is how much room the underlying array has before Go must allocate a bigger one (<a href="https://go.dev/tour/moretypes/11">Tour: Length and capacity</a>).</dd>
+  <dt>make([]int, 0, 3)</dt><dd>Creates a slice with length 0 and capacity 3.</dd>
+  <dt>s = append(s, x)</dt><dd>Adds elements and <strong>returns</strong> the updated slice. You must keep that returned value (<a href="https://go.dev/tour/moretypes/15">Tour: Appending</a>).</dd>
+</dl>
+
+<h2>What to look for in each example</h2>
+<p>Run every command from the repository root.</p>
+
+<div class="example">
+  <h3>01 · Fixed-size arrays</h3>
+  <p class="path">07-collections/01-arrays/main.go</p>
+  <ul>
+    <li><code>[3]int{10, 20, 30}</code> holds exactly three ints.</li>
+    <li><code>copyOfScores := scores</code> copies the whole array. Changing the copy leaves the original alone. In JS, both names would point to the same array.</li>
+    <li><code>var empty [2]int</code> is filled with zero values, so it prints <code>[0 0]</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./07-collections/01-arrays</pre>
+  <p class="label">Expect</p>
+  <pre>scores: [10 20 30]
+first: 10 length: 3
+original: [10 20 30]
+copy: [99 20 30]
+zero array: [0 0]</pre>
+  <p class="try"><strong>Try:</strong> change the second element of <code>copyOfScores</code> and check the original.</p>
+</div>
+
+<div class="example">
+  <h3>02 · Indexing, slicing, and sharing</h3>
+  <p class="path">07-collections/02-slices/main.go</p>
+  <ul>
+    <li><code>fruits[1:3]</code> gives indexes 1 and 2: <code>[banana pear]</code>.</li>
+    <li><code>middle[0] = "orange"</code> changes <code>fruits</code> too. Both slices look at the same array. This is the big surprise of this folder.</li>
+    <li><code>fruits[:2]</code> and <code>fruits[2:]</code> show the shorthand forms.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./07-collections/02-slices</pre>
+  <p class="label">Expect</p>
+  <pre>first: apple length: 4
+middle: [banana pear]
+fruits: [apple orange pear plum]
+first two: [apple orange]
+last two: [pear plum]</pre>
+  <p class="try"><strong>Try:</strong> change the bounds to <code>fruits[2:4]</code> and predict which fruit changes.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Append, length, and capacity</h3>
+  <p class="path">07-collections/03-append-capacity/main.go</p>
+  <ul>
+    <li>Follow the two numbers <code>len</code> and <code>cap</code> line by line: 0/3, then 2/3, then full at 3/3.</li>
+    <li>Every call is written <code>scores = append(scores, …)</code>. The result goes back into the variable.</li>
+    <li>Appending the 4th value goes past capacity, so Go allocates a bigger array. The code prints only the length here, because the new capacity is chosen by Go and you shouldn't rely on it.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./07-collections/03-append-capacity</pre>
+  <p class="label">Expect</p>
+  <pre>start: 0 3
+scores: [10 20]
+length/capacity: 2 3
+full: [10 20 30]
+grown: [10 20 30 40] length: 4</pre>
+  <p class="try"><strong>Try:</strong> append <code>50</code> as well and predict the final length.</p>
+</div>
+
+<h2>Gotchas coming from JS/TS</h2>
+<ul class="gotchas">
+  <li>Reading past the end, for example <code>fruits[10]</code>, doesn't give <code>undefined</code>. When the index is only known at run time, the program <strong>panics</strong> (crashes) (<a href="https://go.dev/ref/spec#Index_expressions">spec: Index expressions</a>).</li>
+  <li><code>append(s, x)</code> on its own line, without <code>s =</code>, doesn't compile. The compiler complains that the result isn't used.</li>
+  <li>Sub-slices share memory. When you need an independent copy, use <code>copy(dst, src)</code> or build a new slice (<a href="https://go.dev/blog/slices-intro">Go blog</a>).</li>
+</ul>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="1">
+  <p class="q"><code>a := []int{1, 2, 3}</code>, <code>b := a[0:2]</code>, then <code>b[0] = 9</code>. What does <code>a</code> print?</p>
+  <div class="options">
+    <button><code>[1 2 3]</code>, a was copied</button>
+    <button><code>[9 2 3]</code>, memory is shared</button>
+    <button><code>[9 2]</code>, a was shortened</button>
+  </div>
+  <p class="why">Slicing doesn't copy. <code>b</code> is a view of the first two elements of the same array, so writing through <code>b</code> changes <code>a</code>.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q"><code>s := make([]int, 0, 3)</code>. What are <code>len(s)</code> and <code>cap(s)</code>?</p>
+  <div class="options">
+    <button>len 3 and cap 3</button>
+    <button>len 3 and cap 0</button>
+    <button>len 0 and cap 3</button>
+  </div>
+  <p class="why">The second argument to <code>make</code> is the length (0 visible elements). The third is the capacity (room for 3).</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <ol>
+    <li>Arrays have a fixed length and are copied when assigned. You'll rarely use them directly.</li>
+    <li>Slices are views onto an array. Slicing shares memory, it doesn't copy.</li>
+    <li>Always write <code>s = append(s, …)</code>. <code>len</code> is what you see, <code>cap</code> is the room left.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/slices-intro">Go blog: Go Slices: usage and internals</a> (10 min). Its diagrams show exactly what example 02 does.</p>
+  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="06-functions.html">← Topic 06 · Functions and scope</a>
+  <a href="08-maps.html">Topic 08 · Maps →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
