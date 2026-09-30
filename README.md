@@ -53,7 +53,7 @@ All commands in this repository are relative to the repository root.
 | 12 | [Interfaces](12-interfaces/README.md) | Different types providing the same behavior |
 | 13 | [Errors](13-errors/README.md) | Returning failures, checking errors, parsing text |
 | 14 | [Defer](14-defer/README.md) | Cleanup order and argument evaluation |
-| 15 | [Everyday standard library](15-standard-library/README.md) | Cleaning, splitting, and joining text |
+| 15 | [Everyday standard library](15-standard-library/README.md) | Text, dates, slices, paths, flags, I/O, JSON, HTTP, and context |
 | 16 | [Testing](16-testing/README.md) | A small function and its companion test |
 | 17 | [Goroutines and channels](17-concurrency/README.md) | Concurrent work, waiting, sending and receiving |
 

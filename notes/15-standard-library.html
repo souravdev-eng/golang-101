@@ -9,12 +9,12 @@
 <body>
 <main>
 
-<p class="eyebrow">Topic 15 · 15-standard-library/ · ~7 min</p>
+<p class="eyebrow">Topic 15 · 15-standard-library/ · ~5–10 min per example</p>
 <h1>Everyday standard library</h1>
-<p class="lede">This folder cleans up a messy shopping list using the <code>strings</code> package. By the end you'll know where Go keeps the text helpers that JS puts on string methods, and how to look up the rest yourself.</p>
+<p class="lede">Meet common packages through short programs: clean text, format dates, sort a list, work with paths and flags, copy data, read JSON, handle HTTP, and cancel work.</p>
 
 <h2>What this folder is for</h2>
-<p>Go ships with a large <strong>standard library</strong>, a set of packages that come with Go itself, so small jobs need no third-party dependencies (<a href="https://pkg.go.dev/std">Standard library index</a>). This topic shows one package in use. The skill to take away is the habit: <em>import the package, then call <code>package.Function</code></em>.</p>
+<p>Go ships with a large <strong>standard library</strong>, a set of packages that come with Go itself, so small jobs need no third-party dependencies (<a href="https://pkg.go.dev/std">Standard library index</a>). The skill to take away is the habit: <em>import the package, then call <code>package.Function</code></em>.</p>
 <div class="bridge wide">
   <div><p class="label">JS/TS you know</p>
 <pre>const clean = "  Tea,Milk,Bread  "
@@ -60,11 +60,137 @@ display: tea | milk | bread</pre>
   <p class="try"><strong>Try:</strong> add <code>,Eggs</code> to the input string. Predict the <code>display:</code> line before you run it.</p>
 </div>
 
+<div class="example">
+  <h3>02 · Parsing and formatting a date</h3>
+  <p class="path">15-standard-library/02-time/main.go</p>
+  <ul>
+    <li><code>time.Parse(layout, text)</code> reads a date and returns a <code>time.Time</code> and an error. Check the error before using the date.</li>
+    <li>Go's layouts show the reference date <code>Mon Jan 2 15:04:05 MST 2006</code>. The layout <code>2006-01-02</code> means year-month-day.</li>
+    <li><code>Format</code> turns the parsed date back into text. <code>AddDate(0, 0, 7)</code> adds seven calendar days.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/02-time</pre>
+  <p class="label">Expect</p>
+  <pre>date: Mon, 01 Jan 2024
+one week later: 2024-01-08</pre>
+  <p class="try"><strong>Try:</strong> change the input to <code>2024-01-02</code>. Predict the weekday and the date one week later.</p>
+</div>
+
+<div class="example">
+  <h3>03 · Sorting a copy of a slice</h3>
+  <p class="path">15-standard-library/03-slices/main.go</p>
+  <ul>
+    <li><code>slices.Clone(prices)</code> copies the slice so the original order stays available.</li>
+    <li><code>slices.Sort(sorted)</code> changes the copied slice in place. It does not return a sorted slice.</li>
+    <li><code>slices.Contains(sorted, 9)</code> reports whether the slice includes that value.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/03-slices</pre>
+  <p class="label">Expect</p>
+  <pre>original: [12 5 9]
+sorted: [5 9 12]
+has 9: true</pre>
+  <p class="try"><strong>Try:</strong> add <code>3</code> to <code>prices</code>. Predict the new sorted slice.</p>
+</div>
+
+<div class="example">
+  <h3>04 · Working with a file path</h3>
+  <p class="path">15-standard-library/04-filepath/main.go</p>
+  <ul>
+    <li><code>filepath.Join</code> combines path parts with the current operating system's separator.</li>
+    <li><code>filepath.Dir</code> gets the folder, <code>Base</code> gets the file name, and <code>Ext</code> gets its extension.</li>
+    <li><code>filepath.ToSlash</code> makes the displayed paths identical across operating systems. These functions handle path text; they do not create a file.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/04-filepath</pre>
+  <p class="label">Expect</p>
+  <pre>path: reports/2024/sales.csv
+folder: reports/2024
+file: sales.csv
+extension: .csv</pre>
+  <p class="try"><strong>Try:</strong> change <code>sales.csv</code> to <code>summary.txt</code>. Predict the file and extension.</p>
+</div>
+
+<div class="example">
+  <h3>05 · Reading command-line flags</h3>
+  <p class="path">15-standard-library/05-flag/main.go</p>
+  <ul>
+    <li><code>flag.String</code> and <code>flag.Int</code> define named options with defaults and return pointers to their values.</li>
+    <li><code>flag.Parse()</code> reads the options passed after the command. Read the values with <code>*name</code> and <code>*times</code>.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/05-flag</pre>
+  <p class="label">Expect</p>
+  <pre>Hello, Gopher
+Hello, Gopher</pre>
+  <p class="try"><strong>Try:</strong> run <code>go run ./15-standard-library/05-flag -name Go -times 1</code>. Predict how many lines it prints.</p>
+</div>
+
+<div class="example">
+  <h3>06 · Copying to standard output</h3>
+  <p class="path">15-standard-library/06-os-io/main.go</p>
+  <ul>
+    <li><code>strings.NewReader</code> makes text available through an <code>io.Reader</code>. <code>os.Stdout</code> is an <code>io.Writer</code>.</li>
+    <li><code>io.Copy</code> moves data from the reader to the writer and returns a byte count and an error.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/06-os-io</pre>
+  <p class="label">Expect</p>
+  <pre>receipt: tea, milk</pre>
+  <p class="try"><strong>Try:</strong> add <code>, bread</code> to the message.</p>
+</div>
+
+<div class="example">
+  <h3>07 · Reading and writing JSON</h3>
+  <p class="path">15-standard-library/07-json/main.go</p>
+  <ul>
+    <li><code>json.Unmarshal</code> reads JSON into a struct; it needs a pointer so it can fill the fields.</li>
+    <li>Struct tags such as <code>json:"name"</code> set the JSON key. <code>json.Marshal</code> converts the struct back to JSON bytes.</li>
+    <li>Both calls can return an error, so the program checks each one.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/07-json</pre>
+  <p class="label">Expect</p>
+  <pre>product: tea 12
+json: {"name":"tea","price":12}</pre>
+  <p class="try"><strong>Try:</strong> change the price in the JSON input to <code>15</code>.</p>
+</div>
+
+<div class="example">
+  <h3>08 · Handling an HTTP request</h3>
+  <p class="path">15-standard-library/08-http/main.go</p>
+  <ul>
+    <li><code>http.HandlerFunc</code> adapts a function that receives a request and writes a response.</li>
+    <li><code>httptest.NewRequest</code> and <code>NewRecorder</code> let the handler run locally, with no server or internet connection.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/08-http</pre>
+  <p class="label">Expect</p>
+  <pre>status: 200
+body: Hello, Go</pre>
+  <p class="meta">If Go 1.22.1 on macOS reports <code>missing LC_UUID</code>, run <code>go run -ldflags=-linkmode=external ./15-standard-library/08-http</code>.</p>
+  <p class="try"><strong>Try:</strong> change <code>name=Go</code> to <code>name=Gopher</code>.</p>
+</div>
+
+<div class="example">
+  <h3>09 · Cancelling a context</h3>
+  <p class="path">15-standard-library/09-context/main.go</p>
+  <ul>
+    <li><code>context.WithCancel</code> returns a context and a function that signals cancellation.</li>
+    <li>After <code>cancel()</code>, <code>Done()</code> is closed and <code>Err()</code> reports <code>context canceled</code>. The later concurrency topic uses this signal to stop ongoing work.</li>
+  </ul>
+  <p class="label">Run</p>
+  <pre>go run ./15-standard-library/09-context</pre>
+  <p class="label">Expect</p>
+  <pre>before cancel: true
+after cancel: context canceled</pre>
+  <p class="try"><strong>Try:</strong> explain why moving <code>cancel()</code> below <code>&lt;-ctx.Done()</code> would prevent the program from reaching it.</p>
+</div>
+
 <h2>Finding the next helper yourself</h2>
-<p>Every standard package has its own page at <code>pkg.go.dev/&lt;name&gt;</code>, with an index of functions and runnable examples. A few you'll meet soon:</p>
+<p>Every standard package has its own page at <code>pkg.go.dev/&lt;name&gt;</code>, with an index of functions and runnable examples. A few others to explore:</p>
 <dl class="fields">
   <dt>strconv</dt><dd>Converts between strings and numbers, like <code>Number("42")</code> in JS (<a href="https://pkg.go.dev/strconv">strconv</a>).</dd>
-  <dt>sort</dt><dd>Sorts slices, for example the map keys in Topic 08 (<a href="https://pkg.go.dev/sort">sort</a>).</dd>
   <dt>os</dt><dd>Files, environment variables and command-line arguments (<a href="https://pkg.go.dev/os">os</a>).</dd>
 </dl>
 <p class="meta">Or from your terminal: <code>go doc strings.Split</code> prints the docs for a single function.</p>
@@ -72,8 +198,14 @@ display: tea | milk | bread</pre>
 <h2>Gotchas coming from JS/TS</h2>
 <ul class="gotchas">
   <li>There are no string methods: <code>s.trim()</code> doesn't exist. Reach for <code>strings.TrimSpace(s)</code>.</li>
-  <li>Go strings can't be changed. Every helper returns a <strong>new</strong> string, so remember to use or assign the result.</li>
+  <li>Go strings can't be changed. Text-transforming helpers return a <strong>new</strong> string, so remember to use or assign the result.</li>
   <li>Go's names don't always match JS's. JS <code>trim</code> is <code>TrimSpace</code> in Go; Go's <code>strings.Trim</code> needs a list of characters to cut.</li>
+  <li>Go date layouts use the reference date, not <code>YYYY</code> or <code>MM</code> tokens.</li>
+  <li><code>slices.Sort</code> changes the slice you pass in. Clone it first when you need the original order.</li>
+  <li>Use <code>path/filepath</code> for file system paths. The separator can differ by operating system.</li>
+  <li>Call <code>flag.Parse()</code> before reading flag values. The flag helpers return pointers.</li>
+  <li><code>json.Unmarshal</code> needs a pointer to the value it fills.</li>
+  <li>An HTTP handler can be exercised locally with <code>httptest</code>.</li>
 </ul>
 
 <h2>Check yourself</h2>
@@ -96,15 +228,60 @@ display: tea | milk | bread</pre>
   </div>
   <p class="why"><code>Contains</code> compares exactly, so <code>"milk"</code> doesn't match <code>"Milk"</code>. That's why the example lower-cases the text first.</p>
 </div>
+<div class="quiz" data-answer="1">
+  <p class="q">What does <code>time.Parse</code> return besides a date?</p>
+  <div class="options">
+    <button>A sorted slice</button>
+    <button>An error to check</button>
+    <button>The current time</button>
+  </div>
+  <p class="why">Parsing can fail when the text does not match the layout, so check the error before using the date.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">How do you sort a slice while keeping its original order?</p>
+  <div class="options">
+    <button>Clone it, then sort the clone</button>
+    <button>Call <code>slices.Sort</code> on the original</button>
+    <button>Call <code>slices.Contains</code> first</button>
+  </div>
+  <p class="why"><code>slices.Sort</code> changes its input. A clone gives it a separate slice to change.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">Which function gets <code>sales.csv</code> from <code>reports/2024/sales.csv</code>?</p>
+  <div class="options">
+    <button><code>filepath.Dir</code></button>
+    <button><code>filepath.Ext</code></button>
+    <button><code>filepath.Base</code></button>
+  </div>
+  <p class="why"><code>Base</code> returns the final path element. <code>Dir</code> returns its folder, and <code>Ext</code> returns <code>.csv</code>.</p>
+</div>
+<div class="quiz" data-answer="1">
+  <p class="q">What does <code>flag.Parse()</code> do?</p>
+  <div class="options">
+    <button>Print the default flag values</button>
+    <button>Read options passed to the command</button>
+    <button>Convert a file path to slashes</button>
+  </div>
+  <p class="why">After defining flags, call <code>flag.Parse()</code> so supplied options replace the defaults.</p>
+</div>
+<div class="quiz" data-answer="0">
+  <p class="q">Why does <code>json.Unmarshal</code> receive <code>&amp;product</code>?</p>
+  <div class="options">
+    <button>It needs a pointer to fill the struct</button>
+    <button>It always writes to a file</button>
+    <button>It sends the product over HTTP</button>
+  </div>
+  <p class="why">The pointer lets <code>Unmarshal</code> update <code>product</code>'s fields.</p>
+</div>
 
 <div class="recap">
   <h2>In short</h2>
   <ol>
-    <li>Text helpers are functions in the <code>strings</code> package, not methods on the string.</li>
-    <li>They return new strings, so assign or use the result.</li>
+    <li>Standard-library packages cover everyday text, dates, slices, paths, flags, I/O, JSON, HTTP, and cancellation.</li>
+    <li>Check errors from parsing and I/O; clone a slice before sorting if you need its original order.</li>
     <li>Look anything up at <code>pkg.go.dev/&lt;package&gt;</code> or with <code>go doc</code>.</li>
   </ol>
-  <p><strong>Primary source:</strong> <a href="https://pkg.go.dev/strings">strings package documentation</a>. Skim the index and open the examples for <code>Split</code> and <code>Join</code> (5 min).</p>
+  <p><strong>Primary sources:</strong> <a href="https://pkg.go.dev/std">standard library index</a> and the package pages for <a href="https://pkg.go.dev/encoding/json">encoding/json</a>, <a href="https://pkg.go.dev/net/http">net/http</a>, and <a href="https://pkg.go.dev/context">context</a>. Open the package page for an example that interests you.</p>
   <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
 </div>
 

@@ -16,3 +16,6 @@ Be familiar enough with Go to contribute when an upcoming project uses it. Build
 ## Out of scope
 - Advanced runtime internals, generics, reflection, and performance tuning in the initial course.
 - Production services, frameworks, databases, and deployment in the initial course.
+
+## Phase 2 (planned)
+After topics 01–17, go beyond the basics: composition, errors in depth, generics, packages, deeper testing, practical concurrency, I/O, JSON, and HTTP, ending in a small capstone. Plan: [SPEC-advanced.md](SPEC-advanced.md).
