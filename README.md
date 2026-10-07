@@ -56,6 +56,7 @@ All commands in this repository are relative to the repository root.
 | 15 | [Everyday standard library](15-standard-library/README.md) | Text, dates, slices, paths, flags, I/O, JSON, HTTP, and context |
 | 16 | [Testing](16-testing/README.md) | A small function and its companion test |
 | 17 | [Goroutines and channels](17-concurrency/README.md) | Concurrent work, waiting, sending and receiving |
+| 18 | [The context package](18-context/README.md) | Cancellation, timeouts, deadlines, and the Done/Err signals |
 
 For example, run just one lesson:
 
