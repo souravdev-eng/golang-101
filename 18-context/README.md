@@ -18,6 +18,10 @@ Read and run in this order (about 5–10 minutes per example):
 - [Bounding work with WithTimeout](04-with-timeout/main.go)
 - [Cancelling at a fixed moment with WithDeadline](05-with-deadline/main.go)
 - [Reading Done and Err](06-done-and-err/main.go)
+- [Propagating one context down a chain](07-propagation/main.go)
+- [The parent/child context tree](08-context-tree/main.go)
+- [Fanning out to many workers](09-fan-out/main.go)
+- [Carrying request-scoped values](10-values/main.go)
 
 ## The problem context solves
 
@@ -149,3 +153,97 @@ timeout: ran out of time
 
 Try: Remove `cancel1()` and predict what happens when `describe(ctx1, ...)`
 waits on a context that is never cancelled.
+
+## Propagating one context down a chain
+
+One context is created at the top and passed as the first argument down a call
+chain (`stepA` → `stepB` → `stepC`). The middle functions just forward it;
+cancelling once at the top is felt at the bottom, where `stepC` checks
+`ctx.Done()` before starting work.
+
+From the repository root:
+
+```sh
+go run ./18-context/07-propagation
+```
+
+Expected output:
+
+```text
+stepA: passing ctx down to stepB
+stepB: passing ctx down to stepC
+stepC: ctx cancelled, not starting work
+```
+
+Try: Move `cancel()` to after `stepA(ctx)` returns and predict which `stepC`
+line prints instead.
+
+## The parent/child context tree
+
+A child context is derived from a parent, forming a tree. Cancellation flows
+down only: cancelling the parent cancels the child, but cancelling the child
+leaves the parent alive. This example shows both directions.
+
+From the repository root:
+
+```sh
+go run ./18-context/08-context-tree
+```
+
+Expected output:
+
+```text
+cancel parent -> parent: done child: done
+cancel child  -> parent: alive child: done
+```
+
+Try: Add a grandchild (`context.WithCancel(child1)`) and predict its state after
+`cancelParent1()` runs.
+
+## Fanning out to many workers
+
+Several workers share one context. A single `cancel()` stops all of them; here
+one worker fails and calls `cancel()`, which stops the rest. Standard library
+only (`sync.WaitGroup` + a shared `context`). The results are collected and
+sorted before printing, so the output is the same on every run despite the
+concurrency.
+
+From the repository root:
+
+```sh
+go run ./18-context/09-fan-out
+```
+
+Expected output:
+
+```text
+worker 1: stopped (context canceled)
+worker 2: failed, cancelling the group
+worker 3: stopped (context canceled)
+```
+
+Try: Change `failAt` to `1` and predict which worker now reports the failure
+(the sorted output keeps the lines in worker-number order either way).
+
+## Carrying request-scoped values
+
+`context.WithValue` carries a request ID down a call chain without adding a
+parameter to every function. The key uses a private (unexported) type so it
+cannot collide with keys from other packages, and a typed getter reads it back
+with the comma-ok form so a missing value is reported, not guessed.
+
+From the repository root:
+
+```sh
+go run ./18-context/10-values
+```
+
+Expected output:
+
+```text
+handle: request id is req-42
+handle: no request id in context
+```
+
+Try: Add a second key (another `ctxKey` constant) for a user name, give it its
+own getter, and predict whether it collides with the request ID key.
