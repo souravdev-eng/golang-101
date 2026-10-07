@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · The empty root</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · context · 2 of 14</p>
+<h1>The empty root context</h1>
+<p class="lede"><code>context.Background()</code> is the plain, empty context every tree grows from. It is never cancelled and carries nothing. You create it once, at the top, and build every other context out of it.</p>
+
+<h2>The idea</h2>
+<p>Think of <code>Background()</code> as an <strong>open signal that never closes</strong>. Two methods tell you its state, and they're the same two methods every context has:</p>
+<dl class="fields">
+  <dt>ctx.Done()</dt><dd>A channel that closes when the context is cancelled. For <code>Background()</code> it is <code>nil</code> and never closes — so you never wait on it directly.</dd>
+  <dt>ctx.Err()</dt><dd>Says why the context finished. <code>Background()</code> never finishes, so this is always <code>nil</code>.</dd>
+</dl>
+<p>You rarely use <code>Background()</code> alone. Its job is to be the <em>parent</em> you pass to <code>WithCancel</code>, <code>WithTimeout</code>, and friends in the next notes. There's also <code>context.TODO()</code> — identical, but it signals "I haven't decided which context belongs here yet".</p>
+
+<h2>The code that matters</h2>
+<pre>ctx := context.Background()
+
+// Done() is nil here, so we only COMPARE it — we never receive from it.
+// Receiving from a nil channel (&lt;-ch) would block forever.
+fmt.Println("Done channel is nil:", ctx.Done() == nil)   // true
+fmt.Println("Err is nil:", ctx.Err() == nil)             // true</pre>
+
+<div class="example">
+  <h3>Run it</h3>
+  <p class="path">18-context/02-background/main.go</p>
+  <p class="label">Run</p>
+  <pre>go run ./18-context/02-background</pre>
+  <p class="label">Expect</p>
+  <pre>Done channel is nil: true
+Err is nil: true</pre>
+  <p class="try"><strong>Try:</strong> add <code>fmt.Println(context.TODO().Done() == nil)</code> and predict the result before running.</p>
+</div>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q">Why does Background's <code>Done()</code> channel never fire?</p>
+  <div class="options">
+    <button>Background is never cancelled</button>
+    <button>Background has no children</button>
+    <button>Background ignores every caller</button>
+  </div>
+  <p class="why"><code>Done()</code> closes only when a context is cancelled or times out. <code>Background()</code> can do neither, so its channel stays open forever (it's <code>nil</code>).</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <p>Background is the never-cancelled root. Next you give a context the power to stop — on your command.</p>
+</div>
+
+<nav class="course">
+  <a href="18-01-why-context.html">← 01 · Why context exists</a>
+  <a href="18-03-with-cancel.html">Next: 03 · WithCancel →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

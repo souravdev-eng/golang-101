@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The context package</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · 18-context/ · section map</p>
+<h1>The context package</h1>
+<p class="lede">This folder has fourteen runnable sub-topics. This page is the <strong>map</strong>: the one idea they all share, and a reading path through them. Each sub-topic has its own short note — read one, run its folder, then come back here for the next.</p>
+
+<h2>The one idea, in one picture</h2>
+<p>Every function doing real work keeps asking the same question: <strong>"should I still be doing this?"</strong> A <code>context.Context</code> is the thing it asks. The answer is a channel, <code>ctx.Done()</code>, that stays open (keep going) until someone closes it (stop now). That's the whole package.</p>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const controller = new AbortController();
+const { signal } = controller;
+
+fetch(url, { signal });      // pass it down
+controller.abort();          // signal "stop"
+signal.aborted;              // true now</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>ctx, cancel := context.WithCancel(
+    context.Background())
+
+doWork(ctx)   // pass it down
+cancel()      // signal "stop"
+ctx.Err()     // context.Canceled now</pre></div>
+</div>
+<p>If you've used <code>AbortController</code> / <code>AbortSignal</code> with <code>fetch</code>, you already understand context. Go's version does three extra things JS doesn't: it can cancel itself after a <strong>timeout</strong> or at a <strong>deadline</strong>, it forms a <strong>parent/child tree</strong> (cancel a parent and every child cancels too), and it can carry a few <strong>request-scoped values</strong> along for the ride (<a href="https://go.dev/blog/context">Go blog: Context</a>).</p>
+
+<h2>The reading path</h2>
+<p>Five short acts. Each link is its own note; follow them in order. Run every folder from the repository root (the folder with <code>go.mod</code>).</p>
+
+<h3>Act 1 · Feel the problem</h3>
+<ul>
+  <li><a href="18-01-why-context.html">01 · Why context exists</a> — a goroutine with no way to hear "stop".</li>
+</ul>
+
+<h3>Act 2 · The four ways to make a context</h3>
+<ul>
+  <li><a href="18-02-background.html">02 · The empty root</a> — <code>context.Background()</code>, where every tree begins.</li>
+  <li><a href="18-03-with-cancel.html">03 · WithCancel</a> — you decide when to stop (the <code>AbortController</code>).</li>
+  <li><a href="18-04-with-timeout.html">04 · WithTimeout</a> — it stops itself after a duration.</li>
+  <li><a href="18-05-with-deadline.html">05 · WithDeadline</a> — it stops itself at a fixed moment.</li>
+  <li><a href="18-06-done-and-err.html">06 · Done and Err</a> — how to learn <em>why</em> it stopped.</li>
+</ul>
+
+<h3>Act 3 · Flow it through the program <small>(notes coming soon)</small></h3>
+<ul>
+  <li>07 · Propagation — pass one <code>ctx</code> down a call chain.</li>
+  <li>08 · The context tree — cancelling a parent cancels its children.</li>
+  <li>09 · Fan-out — one <code>cancel()</code> stops many workers.</li>
+</ul>
+
+<h3>Act 4 · Values &amp; real scenarios <small>(notes coming soon)</small></h3>
+<ul>
+  <li>10 · WithValue — carry a request ID down the chain.</li>
+  <li>11 · HTTP server — <code>r.Context()</code> cancels when the client leaves.</li>
+  <li>12 · HTTP client — put a timeout on an outbound call.</li>
+  <li>13 · Graceful shutdown — turn Ctrl+C into a cancelled context.</li>
+</ul>
+
+<h3>Act 5 · The rules <small>(note coming soon)</small></h3>
+<ul>
+  <li>14 · Rules and pitfalls — the do's and don'ts in one file.</li>
+</ul>
+
+<div class="recap">
+  <h2>How to use these notes</h2>
+  <ol>
+    <li>Read one sub-topic note (3–5 min).</li>
+    <li>Run its folder and check your output against the note.</li>
+    <li>Do the <strong>Try</strong> — predict the new output <em>before</em> you run it.</li>
+    <li>Come back here and take the next one.</li>
+  </ol>
+  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/context">The Go Blog: Go Concurrency Patterns — Context</a> (15 min), by the package's authors.</p>
+  <p>Anything unclear? Ask me — I'm your teacher for this course.</p>
+</div>
+
+<nav class="course">
+  <a href="17-concurrency.html">← Topic 17 · Goroutines and channels</a>
+  <a href="18-01-why-context.html">Start: 01 · Why context exists →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

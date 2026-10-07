@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Done and Err</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · context · 6 of 14</p>
+<h1>Reading Done and Err</h1>
+<p class="lede">You've made contexts stop three ways. This note ties the knot: <code>Done()</code> tells you <strong>that</strong> work stopped; <code>Err()</code> tells you <strong>why</strong>. Together they're the entire listening side of context.</p>
+
+<h2>The idea</h2>
+<dl class="fields">
+  <dt>&lt;-ctx.Done()</dt><dd>Blocks until the context finishes. It's a channel, so you receive from it (usually inside a <code>select</code>). It carries no value — the close <em>is</em> the signal.</dd>
+  <dt>ctx.Err()</dt><dd>After <code>Done()</code> fires, returns the reason. Exactly two values matter: <code>context.Canceled</code> (someone called <code>cancel()</code>) and <code>context.DeadlineExceeded</code> (a timeout or deadline passed).</dd>
+</dl>
+<p>So the pattern is always: <strong>wait on <code>Done()</code>, then check <code>Err()</code></strong> to branch on the reason. A <code>switch</code> on <code>ctx.Err()</code> reads cleanly.</p>
+
+<h2>The code that matters</h2>
+<pre>func describe(ctx context.Context, label string) {
+    &lt;-ctx.Done() // wait until it's over
+    switch ctx.Err() {          // then ask why
+    case context.Canceled:
+        fmt.Println(label, "was cancelled by a caller")
+    case context.DeadlineExceeded:
+        fmt.Println(label, "ran out of time")
+    }
+}
+
+// Case 1 — explicit cancel -> context.Canceled
+ctx1, cancel1 := context.WithCancel(context.Background())
+cancel1(); describe(ctx1, "manual:")
+
+// Case 2 — timeout -> context.DeadlineExceeded
+ctx2, cancel2 := context.WithTimeout(context.Background(), 10*time.Millisecond)
+defer cancel2(); describe(ctx2, "timeout:")</pre>
+
+<div class="example">
+  <h3>Run it</h3>
+  <p class="path">18-context/06-done-and-err/main.go</p>
+  <p class="label">Run</p>
+  <pre>go run ./18-context/06-done-and-err</pre>
+  <p class="label">Expect</p>
+  <pre>manual: was cancelled by a caller
+timeout: ran out of time</pre>
+  <p class="try"><strong>Try:</strong> remove <code>cancel1()</code>. Predict what happens when <code>describe(ctx1, ...)</code> waits on a context that is never cancelled. (Hint: look back at note 02.)</p>
+</div>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q">A timeout fired. What does <code>ctx.Err()</code> return?</p>
+  <div class="options">
+    <button>It returns context.DeadlineExceeded</button>
+    <button>It returns context.Canceled</button>
+    <button>It returns nil instead</button>
+  </div>
+  <p class="why"><code>Canceled</code> comes from an explicit <code>cancel()</code>; a timeout or deadline gives <code>DeadlineExceeded</code>. <code>Err()</code> is <code>nil</code> only before <code>Done()</code> fires.</p>
+</div>
+
+<div class="recap">
+  <h2>In short — Act 2 complete</h2>
+  <p>You now have the whole core: four ways to make a context, one channel to watch (<code>Done()</code>), one method for the reason (<code>Err()</code>). Act 3 (propagation, the tree, fan-out) is where these flow through a real program — I'll add those notes next.</p>
+</div>
+
+<nav class="course">
+  <a href="18-05-with-deadline.html">← 05 · WithDeadline</a>
+  <a href="18-context.html">Back to section map →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

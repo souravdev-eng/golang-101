@@ -187,6 +187,23 @@ html { scroll-padding-top: 1.5rem; }
   font-size: 0.92rem;
 }
 .side .label { margin: 1.4rem 0 0.4rem; }
+.side-group {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  width: 100%; margin: 1.3rem 0 0.4rem; padding: 0.3rem 0.4rem;
+  background: none; border: none; border-radius: 6px; cursor: pointer; text-align: left;
+  font: 500 0.75rem/1.4 'IBM Plex Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted);
+}
+.side-group:hover { background: var(--bg); color: var(--text); }
+.side-group-wrap:first-of-type .side-group { margin-top: 0.4rem; }
+.side-group-chevron {
+  flex: none; width: 0.52rem; height: 0.52rem; margin-right: 0.15rem;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform 0.18s ease;
+}
+.side-group-wrap.collapsed .side-group-chevron { transform: rotate(-45deg); }
+.side-group-wrap.collapsed .side-group-body { display: none; }
+@media (prefers-reduced-motion: reduce) { .side-group-chevron { transition: none; } }
 .side-title { display: flex; flex-direction: column; gap: 0.15rem; text-decoration: none; }
 .side-title span:first-child { font: 600 1.05rem Lexend, sans-serif; color: var(--navy); }
 .side-title .label { margin: 0; }
@@ -217,6 +234,42 @@ html { scroll-padding-top: 1.5rem; }
 }
 .side-toc a:hover { color: var(--text); }
 .side-toc a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+
+/* An item that owns sub-notes: link and a caret share one row; the nest and
+   (narrow-screen) section list wrap onto full-width rows below. */
+.side-lessons > li.has-children { display: flex; flex-wrap: wrap; align-items: center; }
+.side-lessons > li.has-children > a,
+.side-lessons > li.has-children > span.side-coming { flex: 1 1 auto; min-width: 0; }
+.side-caret {
+  flex: none; width: 1.7rem; align-self: stretch;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; border-radius: 6px; cursor: pointer; color: var(--muted);
+}
+.side-caret::before {
+  content: ''; width: 0.42rem; height: 0.42rem;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); transition: transform 0.18s ease;
+}
+.side-caret:hover { background: var(--bg); color: var(--text); }
+.side-lessons > li.has-children.open > .side-caret::before { transform: rotate(45deg); }
+.side-sub {
+  flex-basis: 100%; margin: 0.15rem 0 0.4rem 1.15rem !important;
+  border-left: 1px solid var(--border);
+}
+.side-lessons > li.has-children:not(.open) > .side-sub { display: none; }
+.side-lessons > li.has-children > .side-toc { flex-basis: 100%; }
+.side-sub > li > a, .side-sub > li > span {
+  display: flex; gap: 0.5rem; align-items: baseline;
+  padding: 0.3rem 0.5rem; margin-left: -1px; border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  color: var(--body); text-decoration: none; line-height: 1.3; font-size: 0.88rem;
+}
+.side-sub > li > a:hover { background: var(--bg); color: var(--text); }
+.side-sub > li.current > a {
+  background: var(--bg); color: var(--text); font-weight: 600; border-left-color: var(--accent);
+}
+.side-sub .side-num { width: 1.15rem; height: 1.15rem; font: 600 0.64rem/1.05rem Lexend, sans-serif; }
+@media (prefers-reduced-motion: reduce) { .side-caret::before { transition: none; } }
 
 .otp {
   display: none;

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · WithDeadline</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · context · 5 of 14</p>
+<h1>Cancelling at a fixed moment with WithDeadline</h1>
+<p class="lede">Almost identical to <code>WithTimeout</code> — one difference. A timeout is a <em>duration</em> ("20ms from now"). A deadline is an <em>instant</em> ("at exactly this clock time").</p>
+
+<h2>The idea</h2>
+<p>Use a deadline when the stop moment is fixed no matter when this code starts — "every request must finish by 12:00:00", or "stop when the parent's deadline arrives". You build the instant with <code>time.Now().Add(...)</code> (or any <code>time.Time</code>), and everything else is the same shape: a <code>cancel</code> function, <code>defer cancel()</code>, and a <code>select</code> on <code>ctx.Done()</code>.</p>
+<dl class="fields">
+  <dt>WithTimeout(ctx, 20*time.Millisecond)</dt><dd>"Give up 20ms after this line runs."</dd>
+  <dt>WithDeadline(ctx, someMoment)</dt><dd>"Give up when the clock reaches <code>someMoment</code>." Internally, timeout is just deadline = now + duration.</dd>
+</dl>
+
+<h2>The code that matters</h2>
+<pre>deadline := time.Now().Add(20 * time.Millisecond) // a MOMENT, not a length
+ctx, cancel := context.WithDeadline(context.Background(), deadline)
+defer cancel()
+
+result := make(chan string, 1)
+go func() {
+    time.Sleep(1 * time.Second) // Work takes far longer than we allow.
+    result &lt;- "report ready"
+}()
+
+select {
+case data := &lt;-result:
+    fmt.Println("got:", data)
+case &lt;-ctx.Done():                 // Fires the moment `deadline` passes.
+    fmt.Println("missed the deadline:", ctx.Err())
+}</pre>
+
+<div class="example">
+  <h3>Run it</h3>
+  <p class="path">18-context/05-with-deadline/main.go</p>
+  <p class="label">Run</p>
+  <pre>go run ./18-context/05-with-deadline</pre>
+  <p class="label">Expect</p>
+  <pre>missed the deadline: context deadline exceeded</pre>
+  <p class="try"><strong>Try:</strong> change the deadline to <code>time.Now().Add(2 * time.Second)</code>. Predict which line prints.</p>
+</div>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q">How does a deadline differ from a timeout?</p>
+  <div class="options">
+    <button>A fixed moment, not duration</button>
+    <button>A longer wait, not shorter</button>
+    <button>A retry count, not duration</button>
+  </div>
+  <p class="why">Both end the context; a timeout counts a duration forward from now, while a deadline names an exact instant on the clock.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <p>Deadline = a stop <em>moment</em>; timeout = a stop <em>duration</em>. Both close <code>Done()</code>. Next: read <code>Done()</code> and <code>Err()</code> to learn <em>why</em> work stopped.</p>
+</div>
+
+<nav class="course">
+  <a href="18-04-with-timeout.html">← 04 · WithTimeout</a>
+  <a href="18-06-done-and-err.html">Next: 06 · Done and Err →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

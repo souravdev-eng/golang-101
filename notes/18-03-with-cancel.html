@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · WithCancel</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · context · 3 of 14</p>
+<h1>Cancelling explicitly with WithCancel</h1>
+<p class="lede">This is the heart of the package, and it's exactly the <code>AbortController</code> you know from JS. <code>WithCancel</code> hands you a context plus a <code>cancel</code> function. The worker watches the context; you call <code>cancel()</code> to stop it.</p>
+
+<h2>The idea</h2>
+<div class="bridge">
+  <div><p class="label">JS/TS you know</p>
+<pre>const c = new AbortController();
+doWork(c.signal);
+c.abort();   // worker sees signal.aborted</pre></div>
+  <div><p class="label">Go equivalent</p>
+<pre>ctx, cancel := context.WithCancel(
+    context.Background())
+go worker(ctx, ...)
+cancel()     // worker sees &lt;-ctx.Done()</pre></div>
+</div>
+<p>The worker's half is a <code>select</code>: it waits on whichever channel is ready first — either the next job, or <code>ctx.Done()</code> telling it to quit. <code>select</code> is the shape you'll see around cancellation everywhere.</p>
+
+<h2>The code that matters</h2>
+<pre>func worker(ctx context.Context, jobs &lt;-chan string, report chan&lt;- string) {
+    for {
+        select {
+        case &lt;-ctx.Done():            // Closed when the caller calls cancel().
+            report &lt;- "worker: cancelled, stopping"
+            return                    // The worker chooses to return. Go can't force it.
+        case job := &lt;-jobs:           // Otherwise, handle the next job.
+            report &lt;- "worker: handled " + job
+        }
+    }
+}
+
+ctx, cancel := context.WithCancel(context.Background())
+jobs &lt;- "restock tea"; fmt.Println(&lt;-report)
+cancel();            fmt.Println(&lt;-report)   // No job sent now, so Done() wins.</pre>
+<div class="callout"><p><strong>Key point:</strong> <code>cancel()</code> doesn't kill the goroutine. It only <em>closes the Done channel</em>. The worker notices and returns on its own. Nothing stops work that never checks <code>Done()</code>.</p></div>
+
+<div class="example">
+  <h3>Run it</h3>
+  <p class="path">18-context/03-with-cancel/main.go</p>
+  <p class="label">Run</p>
+  <pre>go run ./18-context/03-with-cancel</pre>
+  <p class="label">Expect</p>
+  <pre>worker: handled restock tea
+worker: cancelled, stopping</pre>
+  <p class="try"><strong>Try:</strong> send a second job (<code>jobs &lt;- "restock milk"</code> with its own <code>&lt;-report</code>) before <code>cancel()</code>. Predict the new middle line.</p>
+</div>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q">What does calling <code>cancel()</code> actually do to the worker?</p>
+  <div class="options">
+    <button>Closes the Done channel now</button>
+    <button>Kills the goroutine from outside</button>
+    <button>Empties the shared job channel</button>
+  </div>
+  <p class="why">Go can't stop a goroutine from outside. <code>cancel()</code> closes <code>Done()</code>; the worker's <code>select</code> sees it and returns itself.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <p>You hold the <code>cancel</code> button; the worker watches <code>Done()</code> in a <code>select</code>. Next: let the context press that button for you after a time limit.</p>
+</div>
+
+<nav class="course">
+  <a href="18-02-background.html">← 02 · The empty root</a>
+  <a href="18-04-with-timeout.html">Next: 04 · WithTimeout →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
