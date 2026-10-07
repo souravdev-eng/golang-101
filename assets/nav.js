@@ -114,29 +114,76 @@
   });
 
   /**
-   * One sidebar block per group in course-map.js. An item with `num` shows a
-   * numbered badge; an item with `href: null` shows as "coming".
+   * Build one <li> for a course-map entry. An item with `num` shows a numbered
+   * badge; `href: null` shows as "coming". An entry with a `children` array
+   * renders them as a nested, collapsible list and gains a caret that folds the
+   * children away. The nest starts open when the current page is the item or one
+   * of its children, so you always see where you are.
+   */
+  const buildItem = (entry, nested) => {
+    const current = isCurrent(entry.href);
+    const label = [
+      entry.num != null ? el('span', { class: 'side-num', text: String(entry.num) }) : null,
+      el('span', { class: 'side-name', text: entry.title }),
+    ];
+    const item = entry.href
+      ? el('a', { href: entry.href }, label)
+      : el('span', { class: 'side-coming', title: 'Coming soon' }, label);
+
+    const kids = entry.children || [];
+    const childCurrent = kids.some((child) => isCurrent(child.href));
+    const li = el('li', {
+      class: [current ? 'current' : entry.href ? '' : 'upcoming', nested ? 'nested' : '', kids.length ? 'has-children' : '']
+        .filter(Boolean).join(' '),
+    }, [item]);
+    if (current) item.setAttribute('aria-current', 'page');
+
+    if (kids.length) {
+      // The caret is a sibling of the link (not inside it), so it toggles the
+      // nest without navigating. Flex order keeps it on the link's row.
+      const caret = el('button', {
+        class: 'side-caret', type: 'button',
+        'aria-label': `Toggle ${entry.title} sub-topics`,
+      });
+      const subList = el('ol', { class: 'side-sub' });
+      kids.forEach((child) => subList.appendChild(buildItem(child, true)));
+      const setOpen = (open) => {
+        li.classList.toggle('open', open);
+        caret.setAttribute('aria-expanded', String(open));
+      };
+      setOpen(current || childCurrent);
+      caret.addEventListener('click', () => setOpen(!li.classList.contains('open')));
+      li.appendChild(caret);
+      if (current) li.appendChild(toc);
+      li.appendChild(subList);
+    } else if (current) {
+      li.appendChild(toc);
+    }
+    return li;
+  };
+
+  /**
+   * One collapsible block per group in course-map.js. The group label is a
+   * toggle button; clicking it folds the whole group away. Groups start open.
    */
   const groupBlocks = [];
   (course.groups || []).forEach((group) => {
     const list = el('ol', { class: 'side-lessons' });
-    group.items.forEach((entry) => {
-      const current = isCurrent(entry.href);
-      const label = [
-        entry.num != null ? el('span', { class: 'side-num', text: String(entry.num) }) : null,
-        el('span', { class: 'side-name', text: entry.title }),
-      ];
-      const item = entry.href
-        ? el('a', { href: entry.href }, label)
-        : el('span', { class: 'side-coming', title: 'Coming soon' }, label);
-      const li = el('li', { class: current ? 'current' : entry.href ? '' : 'upcoming' }, [item]);
-      if (current) {
-        item.setAttribute('aria-current', 'page');
-        li.appendChild(toc);
-      }
-      list.appendChild(li);
-    });
-    groupBlocks.push(el('p', { class: 'label', text: group.label }), list);
+    group.items.forEach((entry) => list.appendChild(buildItem(entry, false)));
+
+    const header = el('button', { class: 'side-group', type: 'button', 'aria-expanded': 'true' }, [
+      el('span', { class: 'side-group-name', text: group.label }),
+      el('span', { class: 'side-group-chevron', 'aria-hidden': 'true' }),
+    ]);
+    const body = el('div', { class: 'side-group-body' }, [list]);
+    const wrap = el('div', { class: 'side-group-wrap' }, [header, body]);
+    const setOpen = (open) => {
+      wrap.classList.toggle('collapsed', !open);
+      header.setAttribute('aria-expanded', String(open));
+    };
+    setOpen(true); // main topic groups are open by default
+    header.addEventListener('click', () => setOpen(wrap.classList.contains('collapsed')));
+    groupBlocks.push(wrap);
   });
 
   const side = el('nav', { class: 'side', 'aria-label': 'Course contents' }, [

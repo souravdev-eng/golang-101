@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · WithTimeout</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Topic 18 · context · 4 of 14</p>
+<h1>Bounding work with WithTimeout</h1>
+<p class="lede">Same as <code>WithCancel</code>, but the context also presses its own stop button after a duration. This is how you say "wait at most 20ms for this slow thing, then give up".</p>
+
+<h2>The idea</h2>
+<p>You still get a <code>cancel</code> function, and you still watch <code>ctx.Done()</code>. The only new thing: the context cancels <em>itself</em> when the timer runs out. The example makes the work (1 second) much slower than the timeout (20ms), so the timeout always wins — the result is deterministic.</p>
+<div class="callout"><p><strong>New habit introduced here: <code>defer cancel()</code>.</strong> Even when the timeout will fire on its own, you still call <code>cancel</code> to release the resources Go set up to track the timer. It's never wrong to call it, and leaking it is a real bug. Make it reflexive.</p></div>
+
+<h2>The code that matters</h2>
+<pre>ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+defer cancel() // Always, even though the timeout fires first.
+
+result := make(chan string, 1) // Buffered so the slow worker never blocks.
+go fetch(ctx, result)          // fetch takes a full second.
+
+select {
+case data := &lt;-result:   // Would win only if work beat the timeout.
+    fmt.Println("got:", data)
+case &lt;-ctx.Done():        // Fires after 20ms. ctx.Err() says why.
+    fmt.Println("gave up:", ctx.Err())
+}</pre>
+
+<div class="example">
+  <h3>Run it</h3>
+  <p class="path">18-context/04-with-timeout/main.go</p>
+  <p class="label">Run</p>
+  <pre>go run ./18-context/04-with-timeout</pre>
+  <p class="label">Expect</p>
+  <pre>gave up: context deadline exceeded</pre>
+  <p class="try"><strong>Try:</strong> change the timeout to <code>2 * time.Second</code>. Predict which <code>select</code> case wins and what prints.</p>
+</div>
+
+<h2>Check yourself</h2>
+<p class="score"></p>
+<div class="quiz" data-answer="0">
+  <p class="q">Work needs 1s, the timeout is 20ms. Which <code>select</code> case wins?</p>
+  <div class="options">
+    <button>The ctx.Done case wins</button>
+    <button>The result data wins</button>
+    <button>Neither case ever wins</button>
+  </div>
+  <p class="why">The timer closes <code>Done()</code> after 20ms, long before the 1s result arrives, so the <code>&lt;-ctx.Done()</code> case is ready first.</p>
+</div>
+
+<div class="recap">
+  <h2>In short</h2>
+  <p><code>WithTimeout</code> = self-cancelling after a duration, plus <code>defer cancel()</code>. Next: the same, but at a fixed clock moment instead of a duration.</p>
+</div>
+
+<nav class="course">
+  <a href="18-03-with-cancel.html">← 03 · WithCancel</a>
+  <a href="18-05-with-deadline.html">Next: 05 · WithDeadline →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/course-map.js"></script>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
