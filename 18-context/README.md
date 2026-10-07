@@ -22,6 +22,10 @@ Read and run in this order (about 5–10 minutes per example):
 - [The parent/child context tree](08-context-tree/main.go)
 - [Fanning out to many workers](09-fan-out/main.go)
 - [Carrying request-scoped values](10-values/main.go)
+- [Reading the request context in an HTTP server](11-http-server/main.go)
+- [Bounding an outbound HTTP call](12-http-client/main.go)
+- [Shutting down gracefully on a signal](13-graceful-shutdown/main.go)
+- [The rules and the pitfalls, in one file](14-rules-and-pitfalls/main.go)
 
 ## The problem context solves
 
@@ -247,3 +251,102 @@ handle: no request id in context
 
 Try: Add a second key (another `ctxKey` constant) for a user name, give it its
 own getter, and predict whether it collides with the request ID key.
+
+## Reading the request context in an HTTP server
+
+Every `*http.Request` carries a context you read with `r.Context()`. It is
+cancelled when the client goes away. Here the handler races one second of slow
+work against `r.Context().Done()`; a client that allows only 20ms disconnects
+first, and the handler abandons the work instead of finishing it for nobody. The
+server runs on a local `httptest` port, so there is no real network.
+
+From the repository root:
+
+```sh
+go run ./18-context/11-http-server
+```
+
+Expected output:
+
+```text
+client: timed out waiting for the server
+handler: client gone, abandoning slow work: context canceled
+```
+
+Try: Raise the client timeout to `2 * time.Second` and predict which `select`
+case wins and which two lines print instead.
+
+## Bounding an outbound HTTP call
+
+On the client side you attach a context with `http.NewRequestWithContext`. If its
+deadline passes before the reply arrives, the in-flight call is aborted. Here a
+local `httptest` server answers in a full second but the request allows only
+20ms, so the call is always cut short. The cause is read from `ctx.Err()`, since
+the raw error text embeds the server's random port.
+
+From the repository root:
+
+```sh
+go run ./18-context/12-http-client
+```
+
+Expected output:
+
+```text
+client: aborted the call: context deadline exceeded
+```
+
+Try: Raise the timeout to `2 * time.Second` and predict whether the call now
+succeeds (and what `ctx.Err()` would be if you printed it after a success).
+
+## Shutting down gracefully on a signal
+
+`signal.NotifyContext` turns an OS signal (Ctrl-C sends SIGINT) into a cancelled
+context, so a long-running program can finish in-flight work and exit cleanly
+rather than dying mid-request. To stay hands-free and deterministic, the program
+raises SIGINT at itself after a short delay, standing in for a human pressing
+Ctrl-C.
+
+From the repository root:
+
+```sh
+go run ./18-context/13-graceful-shutdown
+```
+
+Expected output:
+
+```text
+server: running, waiting for shutdown signal
+server: shutdown signal received, draining in-flight work
+server: finished job 1
+server: finished job 2
+server: exited cleanly
+```
+
+Try: Change the drain loop to three jobs and predict how many `finished job`
+lines print before `exited cleanly`.
+
+## The rules and the pitfalls, in one file
+
+One runnable file collects the five rules that keep context code correct, each
+demonstrated beside a comment: `ctx` is the first parameter and named `ctx`;
+always `defer cancel()` even when a timeout fires first; don't store a `Context`
+in a struct — pass it; `WithValue` is for request-scoped data, not optional
+parameters; always check `ctx.Err()` (via `errors.Is`) to learn *why* work
+stopped. The 5ms timeout beats the 50ms of work, so the fetch always times out.
+
+From the repository root:
+
+```sh
+go run ./18-context/14-rules-and-pitfalls
+```
+
+Expected output:
+
+```text
+fetch: stopped because it ran out of time
+request user: alice
+```
+
+Try: Raise the timeout to `500 * time.Millisecond` and predict which of the three
+`fetch:` lines prints instead.
