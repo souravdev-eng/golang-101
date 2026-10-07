@@ -6,7 +6,8 @@ import (
 )
 
 // worker handles jobs until the caller cancels the context. ctx is always the
-// first parameter and is named ctx by convention.
+// first parameter and is named ctx by convention. The arrow on a channel type
+// marks its direction: <-chan is receive-only, chan<- is send-only.
 func worker(ctx context.Context, jobs <-chan string, report chan<- string) {
 	for {
 		// select waits on whichever channel is ready first. Here the worker

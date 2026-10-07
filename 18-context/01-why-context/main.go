@@ -19,7 +19,8 @@ func countUp(steps int, workers *sync.WaitGroup) {
 func main() {
 	var workers sync.WaitGroup
 	workers.Add(1)          // Register one unit of work before starting it.
-	go countUp(5, &workers) // go runs countUp in a separate goroutine.
+	go countUp(5, &workers) // go runs countUp in a separate goroutine. &workers
+	// passes a pointer so the goroutine updates this same WaitGroup, not a copy.
 
 	// We have no way to say "stop at step 1". The only option is to wait for
 	// every step to finish. Wait() blocks until the registered work is done,

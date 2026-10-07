@@ -7,7 +7,8 @@ import (
 )
 
 // fetch pretends to call a slow service. It reports its result on a buffered
-// channel so it never blocks, even if nobody is waiting anymore.
+// channel so it never blocks, even if nobody is waiting anymore. chan<- string
+// is a send-only channel: fetch may send on it but not receive.
 func fetch(ctx context.Context, result chan<- string) {
 	// time.AfterFunc runs the function after the delay. One full second is far
 	// longer than the timeout below, so the timeout always wins.
