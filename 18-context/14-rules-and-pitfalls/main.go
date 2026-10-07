@@ -14,7 +14,8 @@ import (
 // lifetime; a struct outlives the call. Keep configuration in the struct and
 // pass ctx to each method instead. This type holds a name — and no ctx field.
 type fetcher struct {
-	name string
+	name string // Illustrative config: the kind of long-lived field that does
+	// belong on the struct, unlike a Context. Unused here on purpose.
 }
 
 // RULE 1: ctx is the FIRST parameter, and it is named ctx. Every function in the

@@ -14,29 +14,31 @@ import (
 // the tab, the connection drops, or the client's own timeout fires. Watching it
 // lets a handler abandon expensive work nobody is waiting for anymore.
 
-// outcome carries the handler's result back to main so main can print both
-// lines in order. Without this the handler (running in the server's goroutine)
-// and main would race to stdout and the output would not be deterministic.
-var outcome = make(chan string, 1)
-
-// slowHandler pretends to assemble an inventory report that takes a full second.
-// It races that slow work against r.Context().Done(), which fires when the
-// client disconnects. Whichever happens first decides what the handler does.
-func slowHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	select {
-	case <-time.After(1 * time.Second): // The slow work finishing first.
-		fmt.Fprintln(w, "inventory ready")
-		outcome <- "handler: finished the slow work"
-	case <-ctx.Done(): // The client gave up; stop wasting effort on it.
-		outcome <- fmt.Sprintf("handler: client gone, abandoning slow work: %v", ctx.Err())
-	}
-}
-
 func main() {
+	// outcome carries the handler's result back to main so main can print both
+	// lines in order. Without it the handler (running in the server's goroutine)
+	// and main would race to stdout and the output would not be deterministic.
+	// Keeping it a local channel the handler closure captures mirrors the rest
+	// of the section, where channels are created in main and passed to the work.
+	outcome := make(chan string, 1)
+
+	// racingHandler pretends to assemble an inventory report that takes a full
+	// second. It races that slow work against r.Context().Done(), which fires
+	// when the client disconnects, and reports which one won on outcome.
+	racingHandler := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		select {
+		case <-time.After(1 * time.Second): // The slow work finishing first.
+			fmt.Fprintln(w, "inventory ready")
+			outcome <- "handler: finished the slow work"
+		case <-ctx.Done(): // The client gave up; stop wasting effort on it.
+			outcome <- fmt.Sprintf("handler: client gone, abandoning slow work: %v", ctx.Err())
+		}
+	}
+
 	// httptest.NewServer spins up a real HTTP server on a random local port, so
 	// the example needs no network and cleans up with srv.Close().
-	srv := httptest.NewServer(http.HandlerFunc(slowHandler))
+	srv := httptest.NewServer(http.HandlerFunc(racingHandler))
 	defer srv.Close()
 
 	// The client allows only 20ms, far less than the handler's one-second work,
