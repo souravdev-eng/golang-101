@@ -3,9 +3,23 @@
  * Brand tokens: navy #051367, accents #2B5FE3 / #1E47B8, Lexend headings,
  * Inter body, IBM Plex Mono labels and code.
  */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Lexend:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Lexend:wght@500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap');
 
+/*
+ * Themes. assets/theme.js sets data-theme on <html> from the reader's choice:
+ *   (none)  Auto: light, or dark when the OS asks for it
+ *   light   always light
+ *   dark    always dark
+ *   paper   warm sepia page with a serif body, for long reading sessions
+ * --hl-* colour the syntax spans from assets/highlight.js.
+ */
 :root {
+  color-scheme: light;
+  --font-body: Inter, system-ui, sans-serif;
+  --font-head: Lexend, Inter, sans-serif;
+  --body-size: 17px;
+  --body-leading: 1.65;
+  --content-w: 66rem;
   --navy: #051367;
   --accent: #2B5FE3;
   --accent-deep: #1E47B8;
@@ -20,9 +34,17 @@
   --good-bg: #E6F4EC;
   --bad: #B42318;
   --bad-bg: #FDECEA;
+  --hl-kw: #C2185B;
+  --hl-str: #137333;
+  --hl-num: #0550AE;
+  --hl-const: #0550AE;
+  --hl-fn: #6F42C1;
+  --hl-type: #A44A00;
+  --hl-com: #6B7A90;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-theme="paper"]) {
+    color-scheme: dark;
     --navy: #AFC2FF;
     --accent: #7C9BFF;
     --accent-deep: #9DB3FF;
@@ -37,13 +59,36 @@
     --good-bg: #0F2A1E;
     --bad: #FF8A80;
     --bad-bg: #2E1414;
+    --hl-kw: #FF7AB2;
+    --hl-str: #8BDB8B;
+    --hl-num: #79C0FF;
+    --hl-const: #79C0FF;
+    --hl-fn: #D2A8FF;
+    --hl-type: #FFB46B;
+    --hl-com: #7D879C;
   }
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --navy: #AFC2FF; --accent: #7C9BFF; --accent-deep: #9DB3FF;
   --text: #E8ECF6; --body: #C3CAD9; --muted: #8A94A8;
   --bg: #0B1020; --tint: #141B33; --border: #2A3450; --code-bg: #121831;
   --good: #5BD19A; --good-bg: #0F2A1E; --bad: #FF8A80; --bad-bg: #2E1414;
+  --hl-kw: #FF7AB2; --hl-str: #8BDB8B; --hl-num: #79C0FF; --hl-const: #79C0FF;
+  --hl-fn: #D2A8FF; --hl-type: #FFB46B; --hl-com: #7D879C;
+}
+:root[data-theme="paper"] {
+  color-scheme: light;
+  --font-body: Literata, Georgia, 'Times New Roman', serif;
+  --font-head: Literata, Georgia, serif;
+  --body-size: 18px;
+  --body-leading: 1.75;
+  --navy: #3B2A16; --accent: #2F5D9E; --accent-deep: #234A80;
+  --text: #2B2317; --body: #433A2B; --muted: #7D705A;
+  --bg: #F7F1E3; --tint: #EFE6D1; --border: #DDCFB2; --code-bg: #EFE6D1;
+  --good: #2F6B3A; --good-bg: #E2EAD0; --bad: #9C2B1E; --bad-bg: #F3DDD2;
+  --hl-kw: #A3301E; --hl-str: #4C6A1C; --hl-num: #1F5A8A; --hl-const: #1F5A8A;
+  --hl-fn: #6B3FA0; --hl-type: #8A4B08; --hl-com: #8F8168;
 }
 
 * { box-sizing: border-box; }
@@ -52,15 +97,16 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--body);
-  font: 17px/1.65 Inter, system-ui, sans-serif;
+  font: var(--body-size)/var(--body-leading) var(--font-body);
 }
-main { max-width: 56rem; margin: 0 auto; padding: 2.5rem 24px 4rem; }
+main { max-width: var(--content-w); margin: 0 auto; padding: 2.5rem 32px 4rem; }
+@media (max-width: 640px) { main { padding: 1.75rem 16px 3rem; } }
 
-h1, h2, h3 { font-family: Lexend, Inter, sans-serif; color: var(--text); line-height: 1.25; }
+h1, h2, h3 { font-family: var(--font-head); color: var(--text); line-height: 1.25; }
 h1 { font-size: 2rem; margin: 0.25rem 0 0.75rem; color: var(--navy); }
 h2 { font-size: 1.35rem; margin: 2.75rem 0 0.75rem; }
 h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
-p, li { max-width: 50rem; }
+:root[data-theme="paper"] :is(h1, h2, h3) { font-weight: 600; letter-spacing: -0.005em; }
 a { color: var(--accent); text-underline-offset: 2px; }
 a:hover { color: var(--accent-deep); }
 strong { color: var(--text); }
@@ -85,6 +131,17 @@ pre {
   line-height: 1.5;
   color: var(--text);
 }
+/* Program output ("Expect" blocks) reads as console text, not source. */
+pre.is-output { background: var(--bg); border-style: dashed; color: var(--body); }
+
+/* Syntax colours from assets/highlight.js. */
+.hl-kw { color: var(--hl-kw); }
+.hl-str { color: var(--hl-str); }
+.hl-num { color: var(--hl-num); }
+.hl-const { color: var(--hl-const); }
+.hl-fn { color: var(--hl-fn); }
+.hl-type { color: var(--hl-type); }
+.hl-com { color: var(--hl-com); font-style: italic; }
 
 /* A highlighted aside: key idea, warning, or the primary source to read. */
 .callout {
@@ -239,7 +296,7 @@ html { scroll-padding-top: 1.5rem; }
    (narrow-screen) section list wrap onto full-width rows below. */
 .side-lessons > li.has-children { display: flex; flex-wrap: wrap; align-items: center; }
 .side-lessons > li.has-children > a,
-.side-lessons > li.has-children > span.side-coming { flex: 1 1 auto; min-width: 0; }
+.side-lessons > li.has-children > span.side-coming { flex: 1 1 0; min-width: 0; }
 .side-caret {
   flex: none; width: 1.7rem; align-self: stretch;
   display: flex; align-items: center; justify-content: center;
@@ -345,8 +402,67 @@ body.nav-open .scrim { display: block; }
   body.has-chrome .side { transition: none; }
 }
 @media print {
-  .side, .otp, .topbar, .scrim { display: none !important; }
+  .side, .otp, .topbar, .scrim, .done-bar { display: none !important; }
   body.has-chrome { padding: 0; }
+}
+
+/* Theme picker (sidebar) and its top-bar twin. */
+.theme-switch {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+  margin: 0.9rem 0 0.2rem; padding: 3px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+}
+.theme-opt {
+  font: 500 0.74rem/1 Inter, sans-serif; color: var(--muted);
+  background: none; border: 0; border-radius: 6px; padding: 0.45rem 0; cursor: pointer;
+}
+.theme-opt:hover { color: var(--text); }
+.theme-opt[aria-pressed="true"] { background: var(--navy); color: var(--bg); }
+.topbar-actions { display: flex; gap: 0.5rem; flex: none; }
+
+/* Done state: the page toggle, its count, and the checks it leaves behind. */
+.side-done-count { display: block; margin-top: 0.6rem; font: 500 0.72rem 'IBM Plex Mono', monospace; color: var(--muted); }
+.side-done-count:empty { display: none; }
+.done-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  margin: 3rem 0 0; padding: 0.9rem 1.1rem;
+  background: var(--tint); border: 1px solid var(--border); border-radius: 10px;
+}
+.done-bar + nav.course { margin-top: 1.5rem; }
+.done-hint { margin: 0; color: var(--text); font-weight: 500; }
+.done-toggle {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font: 600 0.9rem Inter, sans-serif; cursor: pointer;
+  color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 999px; padding: 0.45rem 1rem 0.45rem 0.6rem;
+}
+.done-toggle::before {
+  content: ''; flex: none; width: 1.05rem; height: 1.05rem; border-radius: 50%;
+  border: 2px solid var(--muted); box-sizing: border-box;
+}
+.done-toggle:hover { border-color: var(--good); }
+.done-toggle[aria-pressed="true"] { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+.done-toggle[aria-pressed="true"]::before {
+  content: '✓'; border-color: var(--good); background: var(--good); color: var(--bg);
+  font: 700 0.68rem/0.95rem Inter, sans-serif; text-align: center;
+}
+.done-toggle-compact { width: 100%; justify-content: center; margin-top: 1rem; font-size: 0.82rem; padding: 0.35rem 0.8rem; }
+
+.side li.done > a .side-num,
+.side li.done > span .side-num { background: var(--good); border-color: var(--good); color: transparent; position: relative; }
+.side li.done > a .side-num::after {
+  content: '✓'; position: absolute; inset: 0; color: var(--bg);
+  font: 700 0.7rem/1.25rem Inter, sans-serif; text-align: center;
+}
+.side-sub li.done > a .side-num::after { font-size: 0.62rem; line-height: 1.05rem; }
+
+.topics > li { position: relative; }
+.topics > li.done > a { border-color: var(--good); }
+.topics > li.done::after {
+  content: '✓ Done'; position: absolute; top: 0.6rem; right: 0.8rem;
+  font: 600 0.68rem 'IBM Plex Mono', monospace; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--good); background: var(--good-bg); border-radius: 999px; padding: 0.15rem 0.5rem;
+  pointer-events: none;
 }
 
 /* ------------------------------------------------------------------
