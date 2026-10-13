@@ -11,6 +11,12 @@
  * - Narrow screens: a top bar with a reading-progress line and a
  *   "Contents" button that opens the sidebar as a drawer.
  *
+ * - Theme picker (Auto / Light / Dark / Paper) in the sidebar and top bar.
+ *   assets/theme.js applies the saved choice before paint; this builds the UI.
+ * - "Mark as done" toggle at the end of each page (and in the right panel).
+ *   Done pages get a check in the sidebar and on the course map. Saved in
+ *   localStorage, so it's per browser.
+ *
  * Pages only need <main> with <h2> sections; ids are generated when missing.
  */
 (function () {
@@ -21,6 +27,27 @@
   const smooth = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
   const pageFile = decodeURIComponent(location.pathname.split('/').pop());
   const isCurrent = (href) => href && href.split('/').pop() === pageFile;
+
+  /** Storage that never throws (private windows and file:// can block it). */
+  const store = {
+    get(key, fallback) {
+      try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* not persisted */ }
+    },
+  };
+
+  /** A page's done-key is its folder and file, e.g. "notes/18-03-with-cancel.html". */
+  const pageKey = (href) => {
+    const parts = decodeURIComponent(new URL(href, location.href).pathname).split('/');
+    return parts.slice(-2).join('/');
+  };
+  const DONE_KEY = 'go-basic:done';
+  const THEME_KEY = 'go-basic:theme';
+  const thisKey = pageKey(location.href);
+  const isHome = course.home && pageKey(course.home) === thisKey;
+  const readDone = () => store.get(DONE_KEY, {}) || {};
 
   const el = (tag, attrs = {}, children = []) => {
     const node = document.createElement(tag);
@@ -120,6 +147,7 @@
    * children away. The nest starts open when the current page is the item or one
    * of its children, so you always see where you are.
    */
+  const trackable = []; // sidebar <li>s that can show a done check
   const buildItem = (entry, nested) => {
     const current = isCurrent(entry.href);
     const label = [
@@ -137,6 +165,9 @@
         .filter(Boolean).join(' '),
     }, [item]);
     if (current) item.setAttribute('aria-current', 'page');
+    if (entry.href && !(course.home && pageKey(entry.href) === pageKey(course.home))) {
+      trackable.push({ key: pageKey(entry.href), li });
+    }
 
     if (kids.length) {
       // The caret is a sibling of the link (not inside it), so it toggles the
@@ -186,11 +217,53 @@
     groupBlocks.push(wrap);
   });
 
+  /**
+   * Theme picker: one segmented control in the sidebar, plus a top-bar button
+   * that cycles through the same choices on narrow screens.
+   */
+  const THEMES = [
+    { id: 'auto', label: 'Auto' },
+    { id: 'light', label: 'Light' },
+    { id: 'dark', label: 'Dark' },
+    { id: 'paper', label: 'Paper' },
+  ];
+  const themeButtons = THEMES.map((t) => el('button', {
+    type: 'button', class: 'theme-opt', 'data-theme-id': t.id, text: t.label,
+  }));
+  const themeSwitch = el('div', { class: 'theme-switch', role: 'group', 'aria-label': 'Reading theme' }, themeButtons);
+  const themeCycle = el('button', { class: 'topbar-toggle theme-cycle', type: 'button' });
+  const applyTheme = (id, save) => {
+    if (id === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', id);
+    themeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeId === id)));
+    const label = THEMES.find((t) => t.id === id).label;
+    themeCycle.textContent = label;
+    themeCycle.setAttribute('aria-label', `Theme: ${label}. Switch theme`);
+    if (save) { try { localStorage.setItem(THEME_KEY, id); } catch (e) { /* not persisted */ } }
+  };
+  const savedTheme = () => {
+    let id = 'auto';
+    try { id = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) { /* storage blocked */ }
+    return THEMES.some((t) => t.id === id) ? id : 'auto';
+  };
+  themeSwitch.addEventListener('click', (event) => {
+    const button = event.target.closest('.theme-opt');
+    if (button) applyTheme(button.dataset.themeId, true);
+  });
+  themeCycle.addEventListener('click', () => {
+    const i = THEMES.findIndex((t) => t.id === savedTheme());
+    applyTheme(THEMES[(i + 1) % THEMES.length].id, true);
+  });
+  applyTheme(savedTheme(), false);
+
+  const doneCount = el('span', { class: 'side-done-count' });
   const side = el('nav', { class: 'side', 'aria-label': 'Course contents' }, [
     el('a', { class: 'side-title', href: course.home || '#' }, [
       el('span', { text: course.title }),
       el('span', { class: 'label', text: course.subtitle || '' }),
     ]),
+    doneCount,
+    themeSwitch,
     ...groupBlocks,
   ]);
   scrollLinks(side);
@@ -198,9 +271,56 @@
   /** Right panel: reading progress, then the outline. */
   const progressFill = el('div', { class: 'otp-progress-fill' });
   const progressValue = el('span', { class: 'otp-progress-value', text: '0%' });
+  /**
+   * "Mark as done": one toggle at the end of the page, mirrored in the right
+   * panel. Both write the same entry, and the sidebar and course map follow.
+   */
+  const doneButtons = isHome ? [] : [
+    el('button', { type: 'button', class: 'done-toggle' }),
+    el('button', { type: 'button', class: 'done-toggle done-toggle-compact' }),
+  ];
+  const renderDone = () => {
+    const done = readDone();
+    const here = Boolean(done[thisKey]);
+    doneButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(here));
+      b.textContent = here ? 'Done' : 'Mark as done';
+      b.title = here ? 'Marked as done. Click to undo.' : 'Mark this page as done';
+    });
+    trackable.forEach(({ key, li }) => li.classList.toggle('done', Boolean(done[key])));
+    const finished = trackable.filter(({ key }) => done[key]).length;
+    doneCount.textContent = trackable.length ? `${finished} of ${trackable.length} done` : '';
+    /** Course-map cards link to pages too. */
+    main.querySelectorAll('.topics > li > a[href]').forEach((a) => {
+      a.parentElement.classList.toggle('done', Boolean(done[pageKey(a.getAttribute('href'))]));
+    });
+  };
+  doneButtons.forEach((b) => b.addEventListener('click', () => {
+    const done = readDone();
+    if (done[thisKey]) delete done[thisKey];
+    else done[thisKey] = new Date().toISOString();
+    store.set(DONE_KEY, done);
+    renderDone();
+  }));
+  if (doneButtons.length) {
+    const bar = el('div', { class: 'done-bar' }, [
+      el('p', { class: 'done-hint', text: 'Finished this page?' }),
+      doneButtons[0],
+    ]);
+    const courseNav = main.querySelector('nav.course');
+    if (courseNav) main.insertBefore(bar, courseNav);
+    else main.appendChild(bar);
+  }
+  /** Another tab marked something done: keep this one in step. */
+  window.addEventListener('storage', (event) => {
+    if (event.key === DONE_KEY) renderDone();
+    if (event.key === THEME_KEY) applyTheme(savedTheme(), false);
+  });
+
   const onThisPage = el('aside', { class: 'otp', 'aria-label': 'On this page' }, [
     el('div', { class: 'otp-progress-head' }, [el('span', { text: 'Reading progress' }), progressValue]),
     el('div', { class: 'otp-progress', role: 'progressbar', 'aria-label': 'Reading progress' }, [progressFill]),
+    doneButtons[1] || null,
     el('p', { class: 'otp-title', text: 'On this page' }),
     buildOutline('otp-list'),
   ]);
@@ -211,7 +331,7 @@
   const toggle = el('button', { class: 'topbar-toggle', type: 'button', 'aria-expanded': 'false', text: 'Contents' });
   const topbar = el('div', { class: 'topbar' }, [
     el('span', { class: 'topbar-title', text: course.title }),
-    toggle,
+    el('div', { class: 'topbar-actions' }, [themeCycle, toggle]),
     barProgress,
   ]);
   const scrim = el('div', { class: 'scrim' });
@@ -227,6 +347,7 @@
   document.body.classList.add('has-chrome');
   document.body.prepend(topbar, side, scrim);
   document.body.appendChild(onThisPage);
+  renderDone();
 
   const docTop = (node) => node.getBoundingClientRect().top + window.scrollY;
   const byPosition = (list) => list.slice().sort((a, b) => docTop(a.node) - docTop(b.node));
