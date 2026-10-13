@@ -1,0 +1,42 @@
+/* Slice diagrams stay local to Topic 07 and inherit the course themes. */
+.slice-note .memory-diagram {
+  padding: 1.1rem; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--code-bg);
+}
+.slice-note .memory-diagram .label { margin: 0 0 0.6rem; }
+.slice-note .slice-header {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.5rem 0; color: var(--text);
+}
+.slice-note .slice-header span {
+  padding: 0.3rem 0.65rem; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem;
+}
+.slice-note .memory-arrow { margin: 0.65rem 0; color: var(--accent); font-weight: 600; }
+.slice-note .memory-cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; }
+.slice-note .memory-cell {
+  border: 2px solid var(--accent); border-radius: 7px; padding: 0.55rem 0.2rem;
+  text-align: center; background: var(--tint); color: var(--text);
+  font: 500 1rem/1.5 'IBM Plex Mono', monospace;
+}
+.slice-note .memory-cell small { display: block; font: 0.7rem/1.5 var(--font-body); color: var(--muted); }
+.slice-note .memory-cell.spare { border-style: dashed; border-color: var(--border); background: var(--bg); }
+.slice-note .memory-cell.shared { border-color: var(--good); background: var(--good-bg); }
+.slice-note .memory-diagram figcaption { line-height: 1.5; }
+.slice-note .append-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.slice-note .append-path { padding: 0.85rem; border: 1px solid var(--border); border-radius: 8px; }
+.slice-note .append-path p { margin: 0.4rem 0; }
+.slice-note .append-path strong { color: var(--accent); }
+.slice-note .table-scroll { overflow-x: auto; margin: 1rem 0; }
+.slice-note table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.slice-note th, .slice-note td { padding: 0.7rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.slice-note th { background: var(--tint); color: var(--text); }
+.slice-note .read-path { font-size: 0.9rem; }
+@media (max-width: 959px) {
+  .slice-note h2, .slice-note h3 { scroll-margin-top: 2.5rem; }
+}
+@media (max-width: 640px) {
+  .slice-note .append-paths { grid-template-columns: 1fr; }
+  .slice-note .memory-diagram { padding: 0.8rem; }
+  .slice-note .slice-header span { font-size: 0.78rem; }
+}

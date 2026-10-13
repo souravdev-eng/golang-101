@@ -2,6 +2,8 @@
 
 Store ordered values and learn how slices refer to arrays.
 
+Start with the [HTML note](../notes/07-collections.html). It connects the slice header and backing array to sharing, append, function calls, and copying. Arrays are a short supporting contrast.
+
 Prerequisite: 06-functions
 
 Read and run in this order (about 5–10 minutes per example):
@@ -9,6 +11,7 @@ Read and run in this order (about 5–10 minutes per example):
 - [Fixed-size arrays](01-arrays/main.go)
 - [Indexing, slicing, and sharing](02-slices/main.go)
 - [Append, length, and capacity](03-append-capacity/main.go)
+- [Connect slice behavior](04-slice-behavior/main.go)
 
 ## Fixed-size arrays
 
@@ -75,3 +78,15 @@ grown: [10 20 30 40] length: 4
 ```
 
 Try: Append 50 too and predict the final length.
+
+## Connect slice behavior
+
+Predict whether each block changes the header, the elements, or both. Then run:
+
+```sh
+go run ./07-collections/04-slice-behavior
+```
+
+The program contrasts append with spare capacity against append that must allocate. It also demonstrates sub-slice overwrite, capacity limits, function arguments, independent copying, nil slices, and range values. Expected output is in the HTML note's practice section.
+
+Try: In the reuse block, reduce capacity from 4 to 2 and predict the alias output. In the limited block, replace `scores[:2:2]` with `scores[:2]` and explain which original elements change.

@@ -3,149 +3,293 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arrays and Slices</title>
-<link rel="stylesheet" href="../assets/course.css"><script src="../assets/theme.js"></script>
+<title>Arrays and Slices · Understand Go Slices</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/07-collections.css">
+<script src="../assets/theme.js"></script>
 </head>
 <body>
-<main>
+<main class="slice-note">
 
-<p class="eyebrow">Topic 07 · 07-collections/ · ~9 min</p>
+<p class="eyebrow">Topic 07 · 07-collections/ · Slices first</p>
 <h1>Arrays and slices</h1>
-<p class="lede">This folder shows Go's two kinds of ordered list: the fixed-size <strong>array</strong> and the flexible <strong>slice</strong>. Slices are the one you'll use nearly all the time. The key idea is that a slice is a <em>view</em> onto an array that sits underneath it.</p>
+<p class="lede">You are collecting player scores. You need to add scores, inspect a few of them, and pass the list to a function. In Go, you will usually use <code>[]int</code>, a slice. The important question is: <strong>when do two slices share the same scores, and when do they stop sharing?</strong></p>
+<p class="read-path">Read sections 1–6 as one lesson (~10 min), then predict and run the examples. The expandable sections add optional detail. For revision, jump to <a href="#check-yourself">Check yourself</a> and <a href="#revision-card">Revision card</a>.</p>
 
-<h2>What this folder is for</h2>
-<p>A JS array does everything. Go splits that job in two. An array has a length fixed as part of its type. A slice is a small description (start, length, capacity) of part of an array, and it can grow with <code>append</code> (<a href="https://go.dev/blog/slices-intro">Go blog: Slices intro</a>).</p>
-<div class="bridge">
-  <div><p class="label">JS/TS you know</p>
-<pre>const fruits = ["apple", "banana"];
-fruits.push("pear");
-const part = fruits.slice(0, 2); // a copy
-fruits.length;</pre></div>
-  <div><p class="label">Go equivalent</p>
-<pre>fruits := []string{"apple", "banana"}
-fruits = append(fruits, "pear")
-part := fruits[0:2] // shares memory!
-len(fruits)</pre></div>
-</div>
-<p>Watch the comments. JS <code>.slice()</code> copies, but Go's <code>fruits[0:2]</code> <strong>shares</strong> the same underlying elements.</p>
+<h2 id="mental-model">1 · A slice describes data stored elsewhere</h2>
+<figure class="memory-diagram" aria-label="A scores slice with start at index zero, length two and capacity four refers to a four-element backing array. Only the first two elements are currently in the slice.">
+  <p class="label">scores := make([]int, 2, 4), then assign 10 and 20</p>
+  <div class="slice-header"><strong>scores</strong><span>start → index 0</span><span>len = 2</span><span>cap = 4</span></div>
+  <p class="memory-arrow">↓ Refers to this backing array</p>
+  <div class="memory-cells">
+    <div class="memory-cell">10<small>index 0 · in slice</small></div>
+    <div class="memory-cell">20<small>index 1 · in slice</small></div>
+    <div class="memory-cell spare">0<small>index 2 · spare</small></div>
+    <div class="memory-cell spare">0<small>index 3 · spare</small></div>
+  </div>
+  <figcaption>The slice describes a window. The backing array stores the elements, including reserved slots outside the current length.</figcaption>
+</figure>
+<p>Think of a slice as a small value with three pieces of information, often called its <strong>header</strong>: a reference to its starting element, its length, and its capacity. You do not manage this header yourself; Go updates it through slicing and <code>append</code>.</p>
+<p>An <strong>array</strong> is the fixed-size storage underneath. A slice literal such as <code>scores := []int{10, 20}</code> creates a slice and its backing array for you. You can use slices without declaring an array first.</p>
+<div class="callout"><p><strong>Keep this model:</strong> copying a slice copies its description. It does not copy the elements. This explains sharing, growth, and function calls. <a href="https://go.dev/blog/slices-intro">Go blog: slice internals</a>.</p></div>
+<details>
+  <summary>Arrays: the one-minute contrast</summary>
+  <p><code>[3]int</code> is an array type; <code>[]int</code> is a slice type. An array's length is part of its type, so <code>[3]int</code> and <code>[4]int</code> differ. Assigning an array copies its elements; assigning a slice copies its header.</p>
+  <pre data-lang="go">scores := [3]int{10, 20, 30}
+other := scores
+other[0] = 99
+fmt.Println(scores, other) // [10 20 30] [99 20 30]</pre>
+  <p>Arrays fit values with a size fixed by the problem, such as a 32-byte hash. Use slices for ordinary lists. Optional practice: <code>go run ./07-collections/01-arrays</code>.</p>
+</details>
 
-<h2>Key ideas</h2>
-<dl class="fields">
-  <dt>[3]int{…}</dt><dd>An <strong>array</strong>. The number in brackets is part of the type, so <code>[3]int</code> and <code>[4]int</code> are different types. Assigning an array to a new variable <strong>copies every element</strong>.</dd>
-  <dt>[]string{…}</dt><dd>A <strong>slice</strong>. The brackets are empty. This is Go's everyday list (<a href="https://go.dev/tour/moretypes/7">Tour: Slices</a>).</dd>
-  <dt>s[low:high]</dt><dd>Makes a new slice from index <code>low</code> up to, but not including, <code>high</code>. Leave out <code>low</code> to start at 0, or <code>high</code> to go to the end. The new slice shares elements with the original (<a href="https://go.dev/tour/moretypes/8">Tour: Slices are like references</a>).</dd>
-  <dt>len(s) · cap(s)</dt><dd><strong>Length</strong> is how many elements you can see. <strong>Capacity</strong> is how much room the underlying array has before Go must allocate a bigger one (<a href="https://go.dev/tour/moretypes/11">Tour: Length and capacity</a>).</dd>
-  <dt>make([]int, 0, 3)</dt><dd>Creates a slice with length 0 and capacity 3.</dd>
-  <dt>s = append(s, x)</dt><dd>Adds elements and <strong>returns</strong> the updated slice. You must keep that returned value (<a href="https://go.dev/tour/moretypes/15">Tour: Appending</a>).</dd>
-</dl>
+<h2 id="length-capacity">2 · Length decides access; capacity decides growth</h2>
+<p><code>len(s)</code> counts the elements currently in the slice. Valid element indexes are <code>0</code> through <code>len(s)-1</code>. <code>cap(s)</code> is the maximum length reachable by reslicing from this slice's start, without allocating another array. <strong>Spare append room is <code>cap(s) - len(s)</code>.</strong></p>
+<pre data-lang="go">scores := make([]int, 2, 4)
+scores[0], scores[1] = 10, 20
+fmt.Println(scores, len(scores), cap(scores)) // [10 20] 2 4
 
-<h2>What to look for in each example</h2>
-<p>Run every command from the repository root.</p>
+// scores[2] = 30 would panic: index 2 is outside len, despite cap 4.
+scores = append(scores, 30)
+fmt.Println(scores, len(scores), cap(scores)) // [10 20 30] 3 4</pre>
+<p><code>make([]T, length, capacity)</code> creates storage and sets both numbers. Existing elements receive the type's zero value. Choose the length based on how you intend to fill the slice:</p>
+<div class="table-scroll"><table>
+  <thead><tr><th>Creation</th><th>What you get</th><th>How to fill it</th></tr></thead>
+  <tbody>
+    <tr><td><code>[]int{10, 20}</code></td><td>Known values; len 2, cap 2</td><td>Use immediately</td></tr>
+    <tr><td><code>make([]int, 3)</code></td><td><code>[0 0 0]</code>; len 3, cap 3</td><td>Assign <code>s[i] = value</code></td></tr>
+    <tr><td><code>make([]int, 0, 3)</code></td><td>Empty; len 0, cap 3</td><td>Use <code>s = append(s, value)</code></td></tr>
+    <tr><td><code>var s []int</code></td><td>Nil slice; len 0, cap 0</td><td>Append as values arrive</td></tr>
+  </tbody>
+</table></div>
+<p>Common mistake: <code>make([]int, 3)</code> followed by appending three scores produces six elements, starting with three zeros. Reserve with length 0 when you plan to append. <a href="https://pkg.go.dev/builtin#make">Built-ins: make, len, and cap</a>.</p>
 
-<div class="example">
-  <h3>01 · Fixed-size arrays</h3>
-  <p class="path">07-collections/01-arrays/main.go</p>
-  <ul>
-    <li><code>[3]int{10, 20, 30}</code> holds exactly three ints.</li>
-    <li><code>copyOfScores := scores</code> copies the whole array. Changing the copy leaves the original alone. In JS, both names would point to the same array.</li>
-    <li><code>var empty [2]int</code> is filled with zero values, so it prints <code>[0 0]</code>.</li>
-  </ul>
-  <p class="label">Run</p>
-  <pre>go run ./07-collections/01-arrays</pre>
-  <p class="label">Expect</p>
-  <pre>scores: [10 20 30]
-first: 10 length: 3
-original: [10 20 30]
-copy: [99 20 30]
-zero array: [0 0]</pre>
-  <p class="try"><strong>Try:</strong> change the second element of <code>copyOfScores</code> and check the original.</p>
-</div>
+<h2 id="shared-views">3 · Slicing creates another view of the same elements</h2>
+<figure class="memory-diagram" aria-label="Scores starts at index zero with length four and capacity four. Middle starts at scores index one with length two and capacity three. Middle indexes zero and one refer to scores indexes one and two.">
+  <div class="slice-header"><strong>scores</strong><span>start → index 0</span><span>len = 4</span><span>cap = 4</span></div>
+  <div class="slice-header"><strong>middle := scores[1:3]</strong><span>start → index 1</span><span>len = 2</span><span>cap = 3</span></div>
+  <p class="memory-arrow">↓ Two headers, one backing array</p>
+  <div class="memory-cells">
+    <div class="memory-cell">10<small>scores[0]</small></div>
+    <div class="memory-cell shared">20<small>middle[0]</small></div>
+    <div class="memory-cell shared">30<small>middle[1]</small></div>
+    <div class="memory-cell">40<small>outside middle's len</small></div>
+  </div>
+  <figcaption>Middle's index 0 maps to scores' index 1. Its capacity extends to the end of the array, including the slot holding 40.</figcaption>
+</figure>
+<p><code>s[low:high]</code> includes <code>low</code> and excludes <code>high</code>. The resulting slice starts indexing at 0. For this two-index form, <code>len = high - low</code> and <code>cap = cap(s) - low</code>. The high bound changes length, but does not limit capacity.</p>
+<pre data-lang="go">scores := []int{10, 20, 30, 40}
+middle := scores[1:3]
+middle[0] = 99
+fmt.Println(scores) // [10 99 30 40]
+fmt.Println(middle, len(middle), cap(middle)) // [99 30] 2 3
 
-<div class="example">
-  <h3>02 · Indexing, slicing, and sharing</h3>
-  <p class="path">07-collections/02-slices/main.go</p>
-  <ul>
-    <li><code>fruits[1:3]</code> gives indexes 1 and 2: <code>[banana pear]</code>.</li>
-    <li><code>middle[0] = "orange"</code> changes <code>fruits</code> too. Both slices look at the same array. This is the big surprise of this folder.</li>
-    <li><code>fruits[:2]</code> and <code>fruits[2:]</code> show the shorthand forms.</li>
-  </ul>
-  <p class="label">Run</p>
-  <pre>go run ./07-collections/02-slices</pre>
-  <p class="label">Expect</p>
-  <pre>first: apple length: 4
+alias := scores // This also shares the backing array.
+alias = alias[:2]
+fmt.Println(len(scores), len(alias)) // 4 2: lengths are separate.</pre>
+<p>The write changes shared data. Reslicing changes only the receiving variable's header. <code>s[:2]</code> means start at 0; <code>s[2:]</code> means stop at <code>len(s)</code>; <code>s[:]</code> keeps the same range and still shares.</p>
+<div class="callout"><p><strong>JS/TS bridge:</strong> JavaScript's <code>array.slice(1, 3)</code> makes a shallow copy. Go's <code>s[1:3]</code> shares storage. And <code>b := s</code> gives b its own length and capacity, even though the elements are shared.</p></div>
+<details>
+  <summary>Why can reslicing reach beyond length?</summary>
+  <p>Indexing is limited by length; a slice's explicit upper slicing bound may reach its capacity. After <code>s := make([]int, 2, 4)</code>, <code>s[2]</code> panics, but <code>expanded := s[:4]</code> is valid. The expanded view exposes the reserved slots. They may already contain values written through another slice.</p>
+  <p>For simple slicing of a slice, bounds must satisfy <code>0 ≤ low ≤ high ≤ cap(s)</code>. Omitted high still means <code>len(s)</code>. Invalid bounds at run time panic. <a href="https://go.dev/ref/spec#Slice_expressions">Specification: slice expressions</a>.</p>
+</details>
+
+<h2 id="append">4 · Append may keep or replace the backing array</h2>
+<figure class="memory-diagram">
+  <div class="append-paths">
+    <div class="append-path"><p class="label">Enough capacity</p><p><code>new length ≤ old cap</code></p><p>Write into the existing array<br>↓<br><strong>Return a longer slice</strong></p><p>Other views still share its elements.</p></div>
+    <div class="append-path"><p class="label">Capacity exceeded</p><p><code>new length &gt; old cap</code></p><p>Allocate array → copy → add<br>↓<br><strong>Return a slice of the new array</strong></p><p>Other views stay on the old array.</p></div>
+  </div>
+  <figcaption>In both paths, keep the returned slice. Its length changes; its backing array may change too.</figcaption>
+</figure>
+<h3>A · Room remains: the elements stay shared</h3>
+<pre data-lang="go">scores := make([]int, 2, 4)
+scores[0], scores[1] = 10, 20
+alias := scores
+scores = append(scores, 30)
+scores[0] = 99
+fmt.Println(scores) // [99 20 30]
+fmt.Println(alias)  // [99 20]: shared elements, old length 2</pre>
+<h3>B · No room remains: the result uses new storage</h3>
+<pre data-lang="go">scores := []int{10, 20} // len 2, cap 2: deliberately full
+alias := scores
+scores = append(scores, 30) // Needs a new array.
+scores[0] = 99
+fmt.Println(scores) // [99 20 30]
+fmt.Println(alias)  // [10 20]: still on the old array</pre>
+<p><code>append</code> returns the updated slice; it does not update every variable sharing the old storage. Usually write <code>s = append(s, x)</code>. You can also assign to another variable or return the result. To append a slice, use <code>s = append(s, more...)</code>. Go chooses the new capacity; do not rely on an exact growth factor. <a href="https://pkg.go.dev/builtin#append">Built-in append</a>.</p>
+<div class="callout"><p><strong>Watch sub-slices:</strong> spare capacity may include elements visible through another slice. Appending can overwrite those elements. The example below shows why, and how limiting capacity changes the result.</p></div>
+<details>
+  <summary>Important edge case: appending a sub-slice can overwrite its neighbour</summary>
+  <pre data-lang="go">scores := []int{10, 20, 30, 40}
+firstTwo := scores[:2] // len 2, cap 4
+firstTwo = append(firstTwo, 99)
+fmt.Println(scores) // [10 20 99 40]</pre>
+  <p>Append starts writing at the sub-slice's length. Because there is spare capacity, it writes into scores' existing slot 2.</p>
+  <p>Use a <strong>full slice expression</strong> to limit append room:</p>
+  <pre data-lang="go">scores := []int{10, 20, 30, 40}
+firstTwo := scores[:2:2] // len 2, cap 2
+firstTwo = append(firstTwo, 99) // Forces new storage.
+firstTwo[0] = 77
+fmt.Println(scores)   // [10 20 30 40]
+fmt.Println(firstTwo) // [77 20 99]</pre>
+  <p><code>s[low:high:max]</code> gives capacity <code>max - low</code>. Limiting capacity does <strong>not</strong> copy elements: before this append, <code>firstTwo[0] = 77</code> would still change scores. For an independent copy immediately, use section 6. <a href="https://go.dev/ref/spec#Slice_expressions">Specification: full slice expressions</a>.</p>
+</details>
+
+<h2 id="functions">5 · Functions get a copy of the slice header</h2>
+<p>This is the same rule as <code>alias := scores</code>. Go passes arguments by value: the function gets its own header, pointing at the same elements. Writing <code>s[0]</code> affects the caller. Assigning an appended or resliced header to the local <code>s</code> does not change the caller's length.</p>
+<pre data-lang="go" data-check="program">package main
+
+import "fmt"
+
+func addScore(s []int) []int {
+    s[0] = 99          // Write to shared storage.
+    s = append(s, 30)  // Update the local header.
+    return s          // Give that header back to the caller.
+}
+
+func main() {
+    scores := make([]int, 2, 3)
+    scores[0], scores[1] = 10, 20
+    updated := addScore(scores)
+    fmt.Println(scores)  // [99 20]: caller's length is still 2
+    fmt.Println(updated) // [99 20 30]
+    scores = updated     // Caller keeps the new header.
+}</pre>
+<p>For a function that changes length, use the pattern <code>scores = addScore(scores)</code>. A slice parameter can mutate existing elements without <code>*[]int</code>. The returned slice handles the length change whether append reuses storage or allocates. <a href="https://go.dev/doc/effective_go#slices">Effective Go: slices and functions</a>.</p>
+
+<h2 id="copying">6 · Copy elements when you need independent storage</h2>
+<p>If you want to edit a snapshot without changing the original, allocate a destination, then copy the elements:</p>
+<pre data-lang="go">scores := []int{10, 20, 30}
+snapshot := make([]int, len(scores))
+n := copy(snapshot, scores)
+snapshot[0] = 99
+fmt.Println(n, scores, snapshot) // 3 [10 20 30] [99 20 30]</pre>
+<p><code>copy(dst, src)</code> returns the count copied, which is <code>min(len(dst), len(src))</code>. It does not allocate or grow dst. An empty destination, even one with reserved capacity, copies zero elements. <a href="https://pkg.go.dev/builtin#copy">Built-in copy</a>.</p>
+<p>The standard library also offers <code>snapshot := slices.Clone(scores)</code> after <code>import "slices"</code> (available in this course's Go 1.22). Both approaches make a <strong>shallow copy</strong>: a new outer slice, with elements copied as values. If an element itself holds a pointer, map, or another slice, that referenced data can still be shared. <a href="https://pkg.go.dev/slices#Clone">slices.Clone documentation</a>.</p>
+<details>
+  <summary>Memory consequence: a small view can retain a large array</summary>
+  <p>If you keep just <code>large[:10]</code>, the view still refers to the original storage, so a large backing array can remain in memory. Copy the small portion if it must outlive the large data. Restricting its capacity does not detach the array. <a href="https://go.dev/blog/slices-intro">Go blog: retaining backing arrays</a>.</p>
+</details>
+
+<h2 id="everyday">Everyday slice habits</h2>
+<details>
+  <summary>Range gives you an element value; use the index to replace it</summary>
+  <pre data-lang="go">scores := []int{10, 20}
+for _, score := range scores {
+    score += 5 // Changes the local int, not the slice element.
+}
+fmt.Println(scores) // [10 20]
+for i := range scores {
+    scores[i] += 5
+}
+fmt.Println(scores) // [15 25]</pre>
+  <p>Use <code>for _, score := range scores</code> to read values. Use <code>for i := range scores</code> when replacing elements. This connects to <a href="05-loops.html">Topic 05 · Loops</a>.</p>
+</details>
+<details>
+  <summary>Nil and empty slices both work as empty lists</summary>
+  <pre data-lang="go">var scores []int
+empty := []int{}
+fmt.Println(len(scores), cap(scores), scores == nil) // 0 0 true
+fmt.Println(len(empty), cap(empty), empty == nil)    // 0 0 false
+scores = append(scores, 10) // Appending to nil works.
+fmt.Println(scores) // [10]</pre>
+  <p>Both have zero elements, can be ranged over, and can be appended to. Use <code>len(s) == 0</code> to check whether a list has no elements. Use <code>s == nil</code> only when you care about that distinction. Slices cannot be compared to each other with <code>==</code>; use <code>slices.Equal(a, b)</code> for comparable element types. <a href="https://pkg.go.dev/slices#Equal">slices.Equal</a>.</p>
+</details>
+
+<h2 id="practice">Predict → run → change</h2>
+<p>Run from the repository root. Start with the two existing slice examples, then use the new example to connect the mechanisms. Open each output only after predicting it.</p>
+<p class="meta">To run a short code snippet separately, put it inside <code>func main()</code> in a file with <code>package main</code> and <code>import "fmt"</code>. Section 5 already includes a complete program.</p>
+<details>
+  <summary>02 · Slice bounds and sharing</summary>
+  <p><a href="../07-collections/02-slices/main.go">02-slices/main.go</a>: predict which fruit changes when <code>middle[0]</code> changes.</p>
+  <pre data-lang="sh">go run ./07-collections/02-slices</pre>
+  <details><summary>Expected output</summary><pre data-lang="text">first: apple length: 4
 middle: [banana pear]
 fruits: [apple orange pear plum]
 first two: [apple orange]
-last two: [pear plum]</pre>
-  <p class="try"><strong>Try:</strong> change the bounds to <code>fruits[2:4]</code> and predict which fruit changes.</p>
-</div>
-
-<div class="example">
-  <h3>03 · Append, length, and capacity</h3>
-  <p class="path">07-collections/03-append-capacity/main.go</p>
-  <ul>
-    <li>Follow the two numbers <code>len</code> and <code>cap</code> line by line: 0/3, then 2/3, then full at 3/3.</li>
-    <li>Every call is written <code>scores = append(scores, …)</code>. The result goes back into the variable.</li>
-    <li>Appending the 4th value goes past capacity, so Go allocates a bigger array. The code prints only the length here, because the new capacity is chosen by Go and you shouldn't rely on it.</li>
-  </ul>
-  <p class="label">Run</p>
-  <pre>go run ./07-collections/03-append-capacity</pre>
-  <p class="label">Expect</p>
-  <pre>start: 0 3
+last two: [pear plum]</pre></details>
+  <p><strong>Change:</strong> use <code>fruits[2:4]</code> instead. Which index of fruits now changes?</p>
+</details>
+<details>
+  <summary>03 · Append, length, and capacity</summary>
+  <p><a href="../07-collections/03-append-capacity/main.go">03-append-capacity/main.go</a>: track the header after each append; mark the append that must allocate.</p>
+  <pre data-lang="sh">go run ./07-collections/03-append-capacity</pre>
+  <details><summary>Expected output</summary><pre data-lang="text">start: 0 3
 scores: [10 20]
 length/capacity: 2 3
 full: [10 20 30]
-grown: [10 20 30 40] length: 4</pre>
-  <p class="try"><strong>Try:</strong> append <code>50</code> as well and predict the final length.</p>
-</div>
+grown: [10 20 30 40] length: 4</pre></details>
+  <p><strong>Change:</strong> start with capacity 4. Does appending 40 still require allocation?</p>
+</details>
+<details>
+  <summary>04 · Connect sharing, append, functions, and copying</summary>
+  <p><a href="../07-collections/04-slice-behavior/main.go">04-slice-behavior/main.go</a>: for each block, ask whether the header changes, the elements change, or both.</p>
+  <pre data-lang="sh">go run ./07-collections/04-slice-behavior</pre>
+  <details><summary>Expected output</summary><pre data-lang="text">shared: [10 99 30 40] middle: [99 30] len/cap: 2 3
+reuse: [99 20 30] alias: [99 20]
+growth: [99 20 30] alias: [10 20]
+overwrite: [10 20 99 40]
+limited: [10 20 30 40] result: [77 20 99]
+function: [99 20] returned: [99 20 30]
+copy: 3 original: [10 20 30] snapshot: [99 20 30]
+empty copy: 0 len/cap: 0 3
+nil: true len/cap: 0 0 appended: [10]
+range: [15 25]</pre></details>
+  <p><strong>Change:</strong> in the reuse block, reduce capacity from 4 to 2. Predict the alias output. Then replace <code>scores[:2:2]</code> with <code>scores[:2]</code> in the limited block and explain both changed scores.</p>
+</details>
 
-<h2>Gotchas coming from JS/TS</h2>
-<ul class="gotchas">
-  <li>Reading past the end, for example <code>fruits[10]</code>, doesn't give <code>undefined</code>. When the index is only known at run time, the program <strong>panics</strong> (crashes) (<a href="https://go.dev/ref/spec#Index_expressions">spec: Index expressions</a>).</li>
-  <li><code>append(s, x)</code> on its own line, without <code>s =</code>, doesn't compile. The compiler complains that the result isn't used.</li>
-  <li>Sub-slices share memory. When you need an independent copy, use <code>copy(dst, src)</code> or build a new slice (<a href="https://go.dev/blog/slices-intro">Go blog</a>).</li>
-</ul>
-
-<h2>Check yourself</h2>
-<p class="score"></p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>Answer from the header-and-array model, without running the code.</p>
+<p class="score" aria-live="polite"></p>
 <div class="quiz" data-answer="1">
-  <p class="q"><code>a := []int{1, 2, 3}</code>, <code>b := a[0:2]</code>, then <code>b[0] = 9</code>. What does <code>a</code> print?</p>
-  <div class="options">
-    <button><code>[1 2 3]</code>, a was copied</button>
-    <button><code>[9 2 3]</code>, memory is shared</button>
-    <button><code>[9 2]</code>, a was shortened</button>
-  </div>
-  <p class="why">Slicing doesn't copy. <code>b</code> is a view of the first two elements of the same array, so writing through <code>b</code> changes <code>a</code>.</p>
+  <p class="q"><code>s := make([]int, 0, 3)</code>. Can you write <code>s[0] = 10</code>?</p>
+  <div class="options"><button>Yes, capacity is 3</button><button>No, length is 0; use append</button><button>No, make returned nil</button></div>
+  <p class="why">Indexing uses length. There are no elements yet. <code>s = append(s, 10)</code> makes the length 1.</p>
 </div>
 <div class="quiz" data-answer="2">
-  <p class="q"><code>s := make([]int, 0, 3)</code>. What are <code>len(s)</code> and <code>cap(s)</code>?</p>
-  <div class="options">
-    <button>len 3 and cap 3</button>
-    <button>len 3 and cap 0</button>
-    <button>len 0 and cap 3</button>
-  </div>
-  <p class="why">The second argument to <code>make</code> is the length (0 visible elements). The third is the capacity (room for 3).</p>
+  <p class="q"><code>s := []int{10, 20, 30, 40}</code>, then <code>part := s[1:3]</code>. What are part's length and capacity?</p>
+  <div class="options"><button>Length 2, capacity 2</button><button>Length 2, capacity 4</button><button>Length 2, capacity 3</button></div>
+  <p class="why">Length is 3 − 1. Capacity is 4 − 1, measured from part's starting position.</p>
 </div>
+<div class="quiz" data-answer="0">
+  <p class="q"><code>s := []int{10, 20, 30}</code>, <code>part := s[:2]</code>, then <code>part = append(part, 99)</code>. What does s contain?</p>
+  <div class="options"><button><code>[10 20 99]</code></button><button><code>[10 20 30]</code></button><button><code>[10 20 30 99]</code></button></div>
+  <p class="why">Part has length 2 and capacity 3. Append reuses the array and overwrites slot 2. S keeps its length 3.</p>
+</div>
+<div class="quiz" data-answer="1">
+  <p class="q"><code>s := []int{10, 20}</code>, <code>b := s</code>, <code>s = append(s, 30)</code>, then <code>s[0] = 99</code>. What does b contain?</p>
+  <div class="options"><button><code>[99 20]</code></button><button><code>[10 20]</code></button><button><code>[99 20 30]</code></button></div>
+  <p class="why">The literal has capacity 2. Appending a third element creates a new array for s; b stays on the old array.</p>
+</div>
+<div class="quiz" data-answer="2">
+  <p class="q">A function receives <code>s []int</code>, writes <code>s[0] = 99</code>, and assigns <code>s = append(s, 30)</code> locally. The caller ignores the new header. What can the caller observe?</p>
+  <div class="options"><button>Neither change; everything was copied</button><button>Both the write and a longer length</button><button>The write, but its own length stays the same</button></div>
+  <p class="why">The element write uses shared storage. The append updates the function's local header. Return that header and assign it in the caller to retain the longer slice.</p>
+</div>
+<details><summary>Explain aloud: how would you make a safe snapshot?</summary><p>Allocate with <code>make([]T, len(src))</code> and copy, or use <code>slices.Clone(src)</code>. The outer storage is independent; copying is shallow.</p></details>
 
 <div class="recap">
-  <h2>In short</h2>
+  <h2 id="revision-card">Revision card</h2>
   <ol>
-    <li>Arrays have a fixed length and are copied when assigned. You'll rarely use them directly.</li>
-    <li>Slices are views onto an array. Slicing shares memory, it doesn't copy.</li>
-    <li>Always write <code>s = append(s, …)</code>. <code>len</code> is what you see, <code>cap</code> is the room left.</li>
+    <li><strong>Header + backing array:</strong> assigning or passing a slice copies the header and shares the elements.</li>
+    <li><strong>Length = access; capacity = reslice limit.</strong> Spare append room is <code>cap - len</code>.</li>
+    <li><strong>Slicing shares.</strong> The result has its own start, length, and capacity.</li>
+    <li><strong>Append returns a header.</strong> Enough capacity means reuse; exceeding capacity means new storage.</li>
+    <li><strong>Copy for independence.</strong> Allocate and copy, or use <code>slices.Clone</code>.</li>
   </ol>
-  <p><strong>Primary source:</strong> <a href="https://go.dev/blog/slices-intro">Go blog: Go Slices: usage and internals</a> (10 min). Its diagrams show exactly what example 02 does.</p>
-  <p>Anything unclear? Ask me. I'm your teacher for this course.</p>
+  <p>For any slice puzzle: draw each header → identify shared storage → compare new length with capacity → track element writes separately from header assignments.</p>
 </div>
+<p class="meta">Primary references: <a href="https://go.dev/blog/slices-intro">Go Slices: usage and internals</a> for the mental model; <a href="https://go.dev/ref/spec#Slice_expressions">slice expressions</a> for bounds; <a href="https://pkg.go.dev/builtin">built-ins</a> for append, make, and copy; <a href="https://go.dev/doc/effective_go#slices">Effective Go</a> for function calls; <a href="https://pkg.go.dev/slices">package slices</a> for Clone and Equal. Examples use features supported by Go 1.22.</p>
 
 <nav class="course">
   <a href="06-functions.html">← Topic 06 · Functions and scope</a>
   <a href="08-maps.html">Topic 08 · Maps →</a>
 </nav>
-
 </main>
 <script src="../assets/quiz.js"></script>
 <script src="../assets/course-map.js"></script>
-<script src="../assets/nav.js"></script><script src="../assets/highlight.js"></script>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
 </body>
 </html>
